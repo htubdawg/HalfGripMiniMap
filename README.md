@@ -5,7 +5,7 @@ Minimap for half grip demo
 ![The minimap on each map and weather](docs/preview.png)
 
 ============================================================
-MINIMAP  (MiniMap 0.2.0, for Half Grip Demo 0.418)
+MINIMAP  (MiniMap 0.3.0, for Half Grip Demo 0.418)
 ============================================================
 
 A round, pixel-art minimap in the top left corner of the screen during races,
@@ -29,6 +29,14 @@ clear of the placement board.
   - Drawn in square pixels in the map's colours, like the game's own art.
   - Hidden while the game is paused.
 
+GPS  ($25, in the shop)
+  A GPS that stands on the dash in one of the two module slots, where the
+  nitro lever, the magnet or the slow-mo buttons go. Its screen shows the
+  same map: the whole lap, turned with your car, every racer on it. It has
+  no other effect, so it costs a module slot and little money.
+
+![The GPS at three sizes, and its shop icon at four card sizes](docs/gps.png)
+
 KEYS
   K   show / hide the minimap (rebind in Settings > Controls)
 
@@ -43,4 +51,6 @@ SETTINGS  (BepInEx\config\halfgrip.minimap.cfg)
   Display.PixelSize  screen pixels per minimap pixel (3, like the game's art)
   Display.Margin     gap to the screen edges (24)
   Display.Opacity    1 is solid (0.9)
+  GPS.Width          width of the GPS on the dash, in dash units (1.9)
+  GPS.OffsetX/Y      move the GPS on the dash from where the magnet stands
   Debug.VerboseLog   log each map build: scene, colours, lap length
