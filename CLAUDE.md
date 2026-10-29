@@ -18,8 +18,8 @@ player's car, with a marker per car; and a GPS shop item that shows the same map
 | `Mod.cs` | Config, the toggle key, registers the GPS, makes the persistent HUD object |
 | `Race.cs` | Shared by both maps: finds the race's `TrackManager`, bumps `Version` when `lapManager.trackLine` or the colours change, gathers the cars each frame; `LapCache` keeps each map's `TrackImage` |
 | `MiniMapHud.cs` | The screen minimap: a round `PixelMap` on an overlay canvas in a corner |
-| `Gps.cs` | The GPS item: a clone of the magnet item (no code of its own, MEDIUM, module mount) with its exterior and stats stripped, a new interior prefab and a drawn icon; measures the dash's pixel size from the magnet's sprites |
-| `GpsScreen.cs` | The GPS on the dash (made by the game's `LoadoutSpawner` from the prefab): a lit casing sprite and an unlit screen sprite showing a square `PixelMap` |
+| `Gps.cs` | The GPS item: a clone of the magnet item (no code of its own, MEDIUM, module mount) with its exterior and stats stripped, a new interior prefab and a drawn icon |
+| `GpsScreen.cs` | The GPS on the dash (made by the game's `LoadoutSpawner` from the prefab): measures the cockpit's pixel size (median over the dash's sprites, about 0.05 units), then a casing sprite at that size and a square `PixelMap` screen at twice its resolution, both in the unlit sprite material (the lit one does not draw them) |
 | `GpsArt.cs` | The GPS casing and shop icon, drawn as pixel arrays |
 | `TrackImage.cs` | The lap from above in flat palette colours (ground, road, edge lines, start line) at 4x the minimap's resolution, fitted inside the round window |
 | `PixelMap.cs` | A shown map (point filtered, round or square): rebuilt each frame by sampling `TrackImage` turned to the player's heading, plus the ring and car markers |
