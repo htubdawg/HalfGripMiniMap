@@ -1,0 +1,9 @@
+{
+  "id": "minimap",
+  "name": "MiniMap",
+  "version": "0.1.0",
+  "author": "Claude - Oretsej",
+  "description": "A round minimap in the top right corner: the whole lap, turned with your car, with every racer on it. Drawn from the race's own track line, so it works on the game's maps and on modded ones (ProcTrack and others), coloured to match the map.",
+  "gameVersion": "0.418",
+  "tools": "1.0.2"
+}
