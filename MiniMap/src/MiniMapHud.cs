@@ -46,6 +46,7 @@ namespace HalfGripMiniMap
 			}
 			try
 			{
+				Mod.WatchConfig();
 				if (Mod.Toggle != null && Mod.Toggle.Down)
 				{
 					Mod.Shown.Value = !Mod.Shown.Value;
