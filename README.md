@@ -1,6 +1,6 @@
 # MiniMap for Half Grip
 
-**Version 1.0.0** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
+**Version 1.0.1** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
 
 A pixel-art map of the whole lap that turns with your car and shows every racer. Buy a **GPS** for your dash, or switch on the
 **screen minimap**. It works on every map: the game's own, [ProcTrack](https://github.com/htubdawg/ProcTrack)'s procedural maps, and

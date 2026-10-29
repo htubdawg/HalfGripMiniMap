@@ -22,14 +22,30 @@ namespace HalfGripMiniMap
 		private static readonly Color32 Button = new Color32(70, 70, 76, 255);
 		private static readonly Color32 Clear = new Color32(0, 0, 0, 0);
 
-		/// <summary>Rows of top face and columns of side face that show.</summary>
-		private const int TopRows = 3;
-		private const int SideColumns = 2;
-		/// <summary>Rows of base plate, and how far it reaches past the box on each side.</summary>
-		private const int PlateRows = 3;
-		private const int PlateReach = 3;
+		/// <summary>How chunky the box is drawn: the dash's size, or a compact one for a small shop icon.</summary>
+		internal sealed class Style
+		{
+			/// <summary>Rows of top face and columns of side face that show.</summary>
+			public int TopRows;
+			public int SideColumns;
+			/// <summary>Rows of base plate, and how far it reaches past the box on each side.</summary>
+			public int PlateRows;
+			public int PlateReach;
+			/// <summary>Pixels of plastic between the outline and the screen's recess.</summary>
+			public int Body;
+			/// <summary>Rows between the box's bottom edge and the screen's recess.</summary>
+			public int Chin;
 
-		/// <summary>A casing round a square screen hole.</summary>
+			/// <summary>Pixels the casing adds round the screen, across and up.</summary>
+			public int ExtraWidth => 2 * (Body + 2) + SideColumns + 2 * PlateReach;
+			public int ExtraHeight => PlateRows - 1 + Chin + Body + 4 + TopRows;
+		}
+
+		internal static readonly Style Dash = new Style { TopRows = 3, SideColumns = 2, PlateRows = 3, PlateReach = 3, Body = 2, Chin = 4 };
+		private static readonly Style Card = new Style { TopRows = 2, SideColumns = 1, PlateRows = 2, PlateReach = 2, Body = 1, Chin = 3 };
+		private static readonly Style Tiny = new Style { TopRows = 1, SideColumns = 1, PlateRows = 2, PlateReach = 1, Body = 1, Chin = 2 };
+
+		/// <summary>A casing round a screen hole.</summary>
 		internal sealed class Casing
 		{
 			public Color32[] Pixels;
@@ -40,20 +56,21 @@ namespace HalfGripMiniMap
 			public int ScreenY;
 		}
 
-		/// <param name="screen">Width of the screen hole in pixels.</param>
-		/// <param name="chin">Rows between the box's bottom edge and the screen's recess.</param>
-		internal static Casing Draw(int screen, int chin)
+		/// <param name="sw">Width of the screen hole in pixels.</param>
+		/// <param name="sh">Height of the screen hole in pixels.</param>
+		internal static Casing Draw(int sw, int sh, Style style)
 		{
-			int fw = screen + 8;            // outline, two of plastic, the recess, the screen, and the same on the other side
-			int fh = screen + chin + 6;     // outline, chin, recess, screen, recess, two of plastic, outline
-			int ox = PlateReach;
-			int py = PlateRows - 1;         // the box stands on the plate's top row
-			int w = ox + fw + SideColumns + PlateReach;
-			int h = py + fh + TopRows;
+			int body = style.Body;
+			int fw = sw + 2 * (body + 2);           // outline, plastic, the recess, the screen, and the same on the other side
+			int fh = sh + style.Chin + body + 4;    // outline, chin, recess, screen, recess, plastic, outline
+			int ox = style.PlateReach;
+			int py = style.PlateRows - 1;           // the box stands on the plate's top row
+			int w = ox + fw + style.SideColumns + style.PlateReach;
+			int h = py + fh + style.TopRows;
 			// 0 outside, 1 front, 2 top, 3 side, 4 plate.
 			byte[] face = new byte[w * h];
 
-			for (int y = 0; y < PlateRows; y++)
+			for (int y = 0; y < style.PlateRows; y++)
 			{
 				for (int x = 0; x < w; x++)
 				{
@@ -68,18 +85,18 @@ namespace HalfGripMiniMap
 				}
 			}
 			// The top face: each row up is shifted right, as a box seen from above and to the left.
-			for (int j = 0; j < TopRows; j++)
+			for (int j = 0; j < style.TopRows; j++)
 			{
-				int shift = (j + 1) * SideColumns / TopRows;
+				int shift = (j + 1) * style.SideColumns / style.TopRows;
 				for (int x = 0; x < fw; x++)
 				{
 					face[(py + fh + j) * w + ox + x + shift] = 2;
 				}
 			}
 			// The side face: each column right is shifted up the same way.
-			for (int c = 0; c < SideColumns; c++)
+			for (int c = 0; c < style.SideColumns; c++)
 			{
-				int shift = (c + 1) * TopRows / SideColumns;
+				int shift = (c + 1) * style.TopRows / style.SideColumns;
 				for (int y = 0; y < fh; y++)
 				{
 					int at = (py + y + shift) * w + ox + fw + c;
@@ -106,27 +123,27 @@ namespace HalfGripMiniMap
 						px[y * w + x] = PixelMap.Outline;
 						continue;
 					}
-					Color32 c = f == 1 ? (y < py + 1 + chin ? FrontLow : Front) : f == 2 ? Top : f == 3 ? Side : y == PlateRows - 1 ? PlateTop : Plate;
+					Color32 c = f == 1 ? (y < py + 1 + style.Chin ? FrontLow : Front) : f == 2 ? Top : f == 3 ? Side : y == style.PlateRows - 1 ? PlateTop : Plate;
 					px[y * w + x] = Speckle(c, x, y, f != 4);
 				}
 			}
 
 			// The screen's recess: dark along its top and left, lighter along its bottom and right, so it reads as set into the box.
-			int sx = ox + 4;
-			int sy = py + chin + 2;
-			for (int y = sy - 1; y <= sy + screen; y++)
+			int sx = ox + body + 2;
+			int sy = py + style.Chin + 2;
+			for (int y = sy - 1; y <= sy + sh; y++)
 			{
-				for (int x = sx - 1; x <= sx + screen; x++)
+				for (int x = sx - 1; x <= sx + sw; x++)
 				{
-					bool light = y == sy - 1 || x == sx + screen;
+					bool light = y == sy - 1 || x == sx + sw;
 					px[y * w + x] = light ? RecessLight : RecessDark;
 				}
 			}
 
 			// The chin: a green light on the left, two buttons on the right.
-			if (chin >= 2)
+			if (style.Chin >= 2)
 			{
-				int cy = py + 1 + chin / 2;
+				int cy = py + 1 + style.Chin / 2;
 				px[cy * w + sx] = Led;
 				if (fw >= 18)
 				{
@@ -161,7 +178,11 @@ namespace HalfGripMiniMap
 			return new Color32((byte)Mathf.Clamp(c.r + d, 0, 255), (byte)Mathf.Clamp(c.g + d, 0, 255), (byte)Mathf.Clamp(c.b + d, 0, 255), 255);
 		}
 
-		/// <summary>The shop icon, <paramref name="w"/> by <paramref name="h"/>: the GPS with a lap and the player's arrow on its screen.</summary>
+		/// <summary>
+		/// The shop icon, <paramref name="w"/> by <paramref name="h"/> (the size of the magnet's, which the card is sized to): the GPS with a
+		/// lap and the player's arrow on its screen. The box is drawn in the chunkiest style that still leaves a screen worth the name, so a
+		/// small card still shows one; if not even the smallest fits, just the screen in an outline.
+		/// </summary>
 		internal static Color32[] Icon(int w, int h)
 		{
 			Color32[] px = new Color32[w * h];
@@ -169,42 +190,66 @@ namespace HalfGripMiniMap
 			{
 				px[i] = Clear;
 			}
-			int chin = h >= 24 ? 3 : 2;
-			int screen = Mathf.Min(w - 2 - (8 + SideColumns + 2 * PlateReach), h - 2 - (PlateRows - 1 + chin + 6 + TopRows));
-			if (screen < 6)
+			foreach (Style style in new[] { Dash, Card, Tiny })
 			{
-				return px;
+				// No wider than twice its height: a GPS, not a letterbox.
+				int sh = h - 2 - style.ExtraHeight;
+				int sw = Mathf.Min(w - 2 - style.ExtraWidth, sh * 2);
+				if (sw >= 6 && sh >= 4)
+				{
+					Casing casing = Draw(sw, sh, style);
+					int ox = (w - casing.Width) / 2;
+					int oy = (h - casing.Height) / 2;
+					Blit(casing.Pixels, casing.Width, casing.Height, px, w, h, ox, oy);
+					Lap(px, w, h, ox + casing.ScreenX, oy + casing.ScreenY, sw, sh);
+					return px;
+				}
 			}
-			Casing casing = Draw(screen, chin);
-			int ox = (w - casing.Width) / 2;
-			int oy = (h - casing.Height) / 2;
-			Blit(casing.Pixels, casing.Width, casing.Height, px, w, h, ox, oy);
+			// The bare screen in an outline, centred, no wider than twice its height.
+			int bh = Mathf.Max(1, h - 4);
+			int bw = Mathf.Max(1, Mathf.Min(w - 4, bh * 2));
+			int bx = (w - bw) / 2;
+			int by = (h - bh) / 2;
+			for (int y = by - 1; y <= by + bh; y++)
+			{
+				for (int x = bx - 1; x <= bx + bw; x++)
+				{
+					Put(px, w, h, x, y, PixelMap.Outline);
+				}
+			}
+			Lap(px, w, h, bx, by, bw, bh);
+			return px;
+		}
 
-			// A lap on the screen: grass, a dirt loop, the player's arrow on its bottom stretch.
+		/// <summary>A lap on a screen of the icon: grass, a dirt loop, the player's arrow on its bottom stretch.</summary>
+		private static void Lap(Color32[] px, int w, int h, int x0, int y0, int sw, int sh)
+		{
 			Palette p = Palettes.Forest;
 			Color32 ground = p.Ground;
 			Color32 road = Color.Lerp(p.Road, Color.white, 0.25f);
 			Color32 arrow = new Color32(245, 245, 240, 255);
-			float half = screen * 0.5f;
-			for (int y = 0; y < screen; y++)
+			float hx = sw * 0.5f;
+			float hy = sh * 0.5f;
+			// Radii of the loop, a pixel and a half in from the screen's edges, and the road a pixel and a half wide.
+			float rx = Mathf.Max(1f, hx - 1.5f);
+			float ry = Mathf.Max(1f, hy - 1.5f);
+			for (int y = 0; y < sh; y++)
 			{
-				for (int x = 0; x < screen; x++)
+				for (int x = 0; x < sw; x++)
 				{
-					float u = (x + 0.5f - half) / (half * 0.72f);
-					float v = (y + 0.5f - half) / (half * 0.56f);
+					float u = (x + 0.5f - hx) / rx;
+					float v = (y + 0.5f - hy) / ry;
 					float r = Mathf.Sqrt(u * u + v * v);
-					bool onRoad = Mathf.Abs(r - 1f) * half * 0.64f < 0.75f;
-					int at = (oy + casing.ScreenY + y) * w + ox + casing.ScreenX + x;
-					px[at] = onRoad ? road : ground;
+					bool onRoad = Mathf.Abs(r - 1f) * Mathf.Min(rx, ry) < 0.75f;
+					Put(px, w, h, x0 + x, y0 + y, onRoad ? road : ground);
 				}
 			}
-			int ax = ox + casing.ScreenX + screen / 2;
-			int ay = oy + casing.ScreenY + Mathf.RoundToInt(half - half * 0.56f);
+			int ax = x0 + sw / 2;
+			int ay = y0 + Mathf.RoundToInt(hy - ry);
 			Put(px, w, h, ax, ay + 1, arrow);
 			Put(px, w, h, ax - 1, ay, arrow);
 			Put(px, w, h, ax, ay, arrow);
 			Put(px, w, h, ax + 1, ay, arrow);
-			return px;
 		}
 
 		private static void Blit(Color32[] from, int fw, int fh, Color32[] to, int tw, int th, int ox, int oy)

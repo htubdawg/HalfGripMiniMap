@@ -86,7 +86,7 @@ namespace HalfGripMiniMap
 			Measure(basis.interiorPrefab);
 			made.interiorPrefab = BuildPrefab(basis.interiorPrefab);
 			made.image = Icon(basis.image);
-			Mod.Log.LogInfo("GPS: made from '" + basis.id + "' (" + basis.GetType().Name + "), magnet pixel " + Texel.ToString("0.0000") + ", foot " + Foot + ", sorting " + SortingLayer + "/" + SortingOrder + ", lit '" + (Lit != null ? Lit.name : "none") + "', unlit '" + (Unlit != null ? Unlit.name : "none") + "'");
+			Mod.Info("GPS: made from '" + basis.id + "' (" + basis.GetType().Name + "), magnet pixel " + Texel.ToString("0.0000") + ", foot " + Foot + ", sorting " + SortingLayer + "/" + SortingOrder + ", lit '" + (Lit != null ? Lit.name : "none") + "', unlit '" + (Unlit != null ? Unlit.name : "none") + "'");
 			return made;
 		}
 
@@ -175,7 +175,7 @@ namespace HalfGripMiniMap
 			Sprite sprite = Sprite.Create(tex, new Rect(0, 0, w, h), pivot, ppu);
 			sprite.name = "GpsIcon";
 			sprite.hideFlags = HideFlags.HideAndDontSave;
-			Mod.Info("GPS: icon " + w + "x" + h + " at " + ppu + " px/unit");
+			Mod.Info("GPS: shop icon " + w + "x" + h + " at " + ppu + " px/unit");
 			return sprite;
 		}
 	}
