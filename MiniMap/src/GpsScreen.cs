@@ -86,7 +86,7 @@ namespace HalfGripMiniMap
 			}
 			sizes.Sort();
 			float middle = sizes[sizes.Count / 2];
-			Mod.Log.LogInfo("GPS: dash pixel " + middle.ToString("0.0000") + " units, the middle of " + sizes.Count + " sprites (smallest " + sizes[0].ToString("0.0000") + ", largest " + sizes[sizes.Count - 1].ToString("0.0000") + ")");
+			Mod.Info("GPS: dash pixel " + middle.ToString("0.0000") + " units, the middle of " + sizes.Count + " sprites (smallest " + sizes[0].ToString("0.0000") + ", largest " + sizes[sizes.Count - 1].ToString("0.0000") + ")");
 			if (middle < 0.005f || middle > 0.5f)
 			{
 				Mod.Log.LogWarning("GPS: that dash pixel is out of reason; using " + FallbackTexel);
@@ -147,7 +147,7 @@ namespace HalfGripMiniMap
 			screenSprite = Sprite.Create(map.Texture, new Rect(0, 0, screen, screen), new Vector2(0.5f, 0.5f), ScreenDetail / texel, 0, SpriteMeshType.FullRect);
 			Vector3 middle = foot + new Vector3((casing.ScreenX + hole * 0.5f - casing.Width * 0.5f) * texel, (casing.ScreenY + hole * 0.5f) * texel, 0f);
 			screenPart = Part("Screen", screenSprite, material, middle, 1, layer).gameObject;
-			Mod.Log.LogInfo("GPS: on " + (transform.parent != null ? transform.parent.name : "?") + ", " + casing.Width + "x" + casing.Height + " px casing, " + screen + " px screen, " + (casing.Width * texel).ToString("0.00") + " units wide, foot " + foot.ToString("0.00") + ", casing material '" + (lit ? Gps.Lit.name + "' (" + Gps.Lit.shader.name + ", own copy)" : (material != null ? material.name : "default") + "'"));
+			Mod.Info("GPS: on " + (transform.parent != null ? transform.parent.name : "?") + ", " + casing.Width + "x" + casing.Height + " px casing, " + screen + " px screen, " + (casing.Width * texel).ToString("0.00") + " units wide, foot " + foot.ToString("0.00") + ", casing material '" + (lit ? Gps.Lit.name + "' (" + Gps.Lit.shader.name + ", own copy)" : (material != null ? material.name : "default") + "'"));
 		}
 
 		/// <summary>
@@ -156,6 +156,10 @@ namespace HalfGripMiniMap
 		/// </summary>
 		private void LogDash()
 		{
+			if (!Mod.Verbose.Value)
+			{
+				return;
+			}
 			Transform mount = transform.parent;
 			Transform dash = mount != null ? mount.parent : null;
 			if (dash == null)
@@ -182,7 +186,7 @@ namespace HalfGripMiniMap
 						.Append(", order ").Append(r.sortingOrder).Append(", material '").Append(r.sharedMaterial != null ? r.sharedMaterial.name : "none").Append("'");
 				}
 			}
-			Mod.Log.LogInfo(text.ToString());
+			Mod.Info(text.ToString());
 		}
 
 		private SpriteRenderer Part(string name, Sprite sprite, Material material, Vector3 position, int above, int layer)

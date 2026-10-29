@@ -32,8 +32,9 @@ player's car, with a marker per car; and a GPS shop item that shows the same map
   all the map needs. ProcTrack replaces the line after the scene loads, which is why the HUD re-checks it twice a second.
 - The base map is told from the **scene** name, not the run map entry, so mods that reuse a game scene get that scene's colours.
 - Bump `version` in `mod.json` with each release and keep the version at the top of `README.md` in step.
-- C# 10 and netstandard2.1 only. Tabs, `///` summaries that explain *why*, `Mod.Info(...)` for verbose logging, `Mod.Log.LogWarning` with a
-  try/catch around risky work.
+- C# 10 and netstandard2.1 only. Tabs, `///` summaries that explain *why*, `Mod.Log.LogWarning` with a try/catch around risky work.
+- **Logging:** everything but warnings and errors goes through `Mod.Info(...)`, which writes only with `Debug.VerboseLog` on. No
+  unconditional `LogInfo`, not even for diagnostics; ask the owner to turn verbose on instead.
 - **Pixel look.** The minimap matches the game's pixel art: hard-edged palette colours only, point filtering, a whole number of screen
   pixels per map pixel. Do not add smoothing, blending or rotated smooth sprites.
 - A changed default needs `Mod.Migrate` (BepInEx keeps saved values): bump `Debug.ConfigVersion` and move old values once.
