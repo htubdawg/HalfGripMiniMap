@@ -5,7 +5,7 @@ Minimap for half grip demo
 ![The minimap on each map and weather](docs/preview.png)
 
 ============================================================
-MINIMAP  (MiniMap 0.3.1, for Half Grip Demo 0.418)
+MINIMAP  (MiniMap 0.3.2, for Half Grip Demo 0.418)
 ============================================================
 
 A round, pixel-art minimap in the top left corner of the screen during races,
@@ -51,7 +51,7 @@ SETTINGS  (BepInEx\config\halfgrip.minimap.cfg)
   Display.PixelSize  screen pixels per minimap pixel (3, like the game's art)
   Display.Margin     gap to the screen edges (24)
   Display.Opacity    1 is solid (0.9)
-  GPS.Width          width of the GPS on the dash, in dash units (2.6)
+  GPS.Width          width of the GPS on the dash, in dash units (1.6)
   GPS.OffsetX/Y      move the GPS on the dash from where the magnet stands
   (The config file is re-read when it is saved, so these can be tuned while
   the game runs.)

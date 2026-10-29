@@ -20,8 +20,11 @@ namespace HalfGripMiniMap
 		internal const string Id = "minimap.gps";
 		private const int Cost = 25;
 
-		/// <summary>Size of one pixel of the dash's sprites, in the units of the item's interior.</summary>
-		internal static float Texel = 0.03f;
+		/// <summary>
+		/// Size of one pixel of the magnet's biggest sprite, in the units of the item's interior. Only logged: that sprite is drawn much
+		/// finer than the cockpit, so <see cref="GpsScreen"/> measures the dash itself.
+		/// </summary>
+		internal static float Texel;
 		/// <summary>Where the bottom middle of the casing goes, in the units of the item's interior: where the magnet's base stands.</summary>
 		internal static Vector3 Foot;
 		internal static Material Lit;
@@ -83,7 +86,7 @@ namespace HalfGripMiniMap
 			Measure(basis.interiorPrefab);
 			made.interiorPrefab = BuildPrefab(basis.interiorPrefab);
 			made.image = Icon(basis.image);
-			Mod.Log.LogInfo("GPS: made from '" + basis.id + "' (" + basis.GetType().Name + "), dash pixel " + Texel.ToString("0.0000") + ", foot " + Foot + ", sorting " + SortingLayer + "/" + SortingOrder + ", lit '" + (Lit != null ? Lit.name : "none") + "', unlit '" + (Unlit != null ? Unlit.name : "none") + "'");
+			Mod.Log.LogInfo("GPS: made from '" + basis.id + "' (" + basis.GetType().Name + "), magnet pixel " + Texel.ToString("0.0000") + ", foot " + Foot + ", sorting " + SortingLayer + "/" + SortingOrder + ", lit '" + (Lit != null ? Lit.name : "none") + "', unlit '" + (Unlit != null ? Unlit.name : "none") + "'");
 			return made;
 		}
 

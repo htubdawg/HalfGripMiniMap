@@ -31,6 +31,7 @@ namespace HalfGripMiniMap
 			try
 			{
 				LogDash();
+				texel = MeasureDash();
 				Build();
 			}
 			catch (Exception e)
@@ -40,20 +41,68 @@ namespace HalfGripMiniMap
 			}
 		}
 
+		/// <summary>Screen pixels per casing pixel: the screen is finer than its plastic, like a real one, so a whole lap stays legible on it.</summary>
+		private const int ScreenDetail = 2;
+		/// <summary>When the dash cannot be measured: what the cockpit's pixels measured in game (about 0.05 units).</summary>
+		private const float FallbackTexel = 0.05f;
+
+		/// <summary>Size of one cockpit pixel in the GPS's own units.</summary>
+		private float texel = FallbackTexel;
+
 		/// <summary>The settings the GPS was last built from.</summary>
 		private static string Settings() => Mod.GpsWidth.Value.ToString("0.000") + "|" + Mod.GpsOffsetX.Value.ToString("0.000") + "|" + Mod.GpsOffsetY.Value.ToString("0.000");
+
+		/// <summary>
+		/// The cockpit's pixel size: the middle value over every sprite showing on the dash round the GPS. One sprite is not enough: some
+		/// are drawn much finer than the rest (the magnet's base measured 13 times too small), and the middle value is the cockpit's own.
+		/// </summary>
+		private float MeasureDash()
+		{
+			Transform dash = transform.parent != null ? transform.parent.parent : null;
+			float own = Mathf.Abs(transform.lossyScale.x);
+			if (dash == null || own < 1e-6f)
+			{
+				return FallbackTexel;
+			}
+			System.Collections.Generic.List<float> sizes = new System.Collections.Generic.List<float>();
+			foreach (SpriteRenderer r in dash.GetComponentsInChildren<SpriteRenderer>(false))
+			{
+				if (r.sprite == null || r.transform.IsChildOf(transform) || r.sprite.pixelsPerUnit <= 0f)
+				{
+					continue;
+				}
+				float t = Mathf.Abs(r.transform.lossyScale.x) / r.sprite.pixelsPerUnit / own;
+				if (t > 0f)
+				{
+					sizes.Add(t);
+				}
+			}
+			if (sizes.Count < 5)
+			{
+				Mod.Log.LogWarning("GPS: only " + sizes.Count + " sprites on the dash to measure its pixels by; using " + FallbackTexel);
+				return FallbackTexel;
+			}
+			sizes.Sort();
+			float middle = sizes[sizes.Count / 2];
+			Mod.Log.LogInfo("GPS: dash pixel " + middle.ToString("0.0000") + " units, the middle of " + sizes.Count + " sprites (smallest " + sizes[0].ToString("0.0000") + ", largest " + sizes[sizes.Count - 1].ToString("0.0000") + ")");
+			if (middle < 0.005f || middle > 0.5f)
+			{
+				Mod.Log.LogWarning("GPS: that dash pixel is out of reason; using " + FallbackTexel);
+				return FallbackTexel;
+			}
+			return middle;
+		}
 
 		private void Build()
 		{
 			Clear();
 			built = Settings();
-			float texel = Gps.Texel;
-			int width = Mathf.Clamp(Mathf.RoundToInt(Mod.GpsWidth.Value / texel), 24, 240);
-			int screen = width - 6;
-			GpsArt.Casing casing = GpsArt.Draw(screen, 3, 5);
+			int width = Mathf.Clamp(Mathf.RoundToInt(Mod.GpsWidth.Value / texel), 16, 160);
+			int hole = width - 6;
+			int screen = hole * ScreenDetail;
+			GpsArt.Casing casing = GpsArt.Draw(hole, 2, 4);
 			int layer = transform.parent != null ? transform.parent.gameObject.layer : gameObject.layer;
 			gameObject.layer = layer;
-			float ppu = 1f / texel;
 			// The dash's lit sprite material does not draw these sprites, so both parts use the unlit one; the casing is dimmed at night
 			// in Update so it is not brighter than the cockpit round it.
 			Material material = Gps.Unlit != null ? Gps.Unlit : Gps.Lit;
@@ -61,7 +110,7 @@ namespace HalfGripMiniMap
 			casingTexture = Texture(casing.Width, casing.Height, "GpsCasing");
 			casingTexture.SetPixels32(casing.Pixels);
 			casingTexture.Apply(false, true);
-			casingSprite = Sprite.Create(casingTexture, new Rect(0, 0, casing.Width, casing.Height), new Vector2(0.5f, 0f), ppu);
+			casingSprite = Sprite.Create(casingTexture, new Rect(0, 0, casing.Width, casing.Height), new Vector2(0.5f, 0f), 1f / texel, 0, SpriteMeshType.FullRect);
 			Vector3 foot = Gps.Foot + new Vector3(Mod.GpsOffsetX.Value, Mod.GpsOffsetY.Value, 0f);
 			casingRenderer = Part("Casing", casingSprite, material, foot, 0, layer);
 			casingPart = casingRenderer.gameObject;
@@ -69,8 +118,8 @@ namespace HalfGripMiniMap
 			map = new PixelMap(screen, false);
 			map.Blank(NoSignal);
 			map.Upload();
-			screenSprite = Sprite.Create(map.Texture, new Rect(0, 0, screen, screen), new Vector2(0.5f, 0.5f), ppu);
-			Vector3 middle = foot + new Vector3((casing.ScreenX + screen * 0.5f - casing.Width * 0.5f) * texel, (casing.ScreenY + screen * 0.5f) * texel, 0f);
+			screenSprite = Sprite.Create(map.Texture, new Rect(0, 0, screen, screen), new Vector2(0.5f, 0.5f), ScreenDetail / texel, 0, SpriteMeshType.FullRect);
+			Vector3 middle = foot + new Vector3((casing.ScreenX + hole * 0.5f - casing.Width * 0.5f) * texel, (casing.ScreenY + hole * 0.5f) * texel, 0f);
 			screenPart = Part("Screen", screenSprite, material, middle, 1, layer).gameObject;
 			Mod.Log.LogInfo("GPS: on " + (transform.parent != null ? transform.parent.name : "?") + ", " + casing.Width + "x" + casing.Height + " px casing, " + screen + " px screen, " + (casing.Width * texel).ToString("0.00") + " units wide, foot " + foot.ToString("0.00") + ", material '" + (material != null ? material.name : "default") + "'");
 		}
