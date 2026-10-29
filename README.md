@@ -18,8 +18,8 @@ as red dots and other players as blue dots. It has no other effect, so it costs 
 
 ## The screen minimap
 
-The same map in a corner of the screen (top left, clear of the placement board). It is **off by default**: press **K** in a race to
-show or hide it, or set `Display.Shown = true` in the config.
+The same map in a corner of the screen (top left, clear of the placement board). It is **off by default**. To use it, set
+`Display.Enabled = true` in the config and restart the game. Then **K** shows or hides it in a race.
 
 ![The minimap on each map and weather](docs/preview.png)
 
@@ -78,16 +78,17 @@ look for `Loaded MiniMap` in `BepInEx\LogOutput.log`.
 
 | Key | Does |
 |---|---|
-| **K** | Show / hide the screen minimap (rebind it in Settings > Controls) |
+| **K** | Show / hide the screen minimap. The key is only there (in Settings > Controls, where you can rebind it) when `Display.Enabled` is on. |
 
 ## Settings
 
 In `BepInEx\config\halfgrip.minimap.cfg`, written the first time the game runs with the mod. The file is read again whenever it is
-saved, so you can change these while the game runs.
+saved, so you can change these while the game runs (all but `Display.Enabled`, which needs a restart).
 
 | Setting | Default | What it does |
 |---|---|---|
-| `Display.Shown` | `false` | Show the screen minimap (K flips it) |
+| `Display.Enabled` | `false` | Use the screen minimap and add its K key to Settings > Controls (restart after changing it) |
+| `Display.Shown` | `true` | Whether the screen minimap is showing (K flips it) |
 | `Display.Corner` | `TopLeft` | `TopLeft`, `TopRight`, `BottomLeft` or `BottomRight` |
 | `Display.Size` | `300` | Width, in pixels of a 1080 pixel high screen |
 | `Display.PixelSize` | `3` | Screen pixels per map pixel (3 matches the game's art) |

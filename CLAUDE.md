@@ -37,7 +37,9 @@ player's car, with a marker per car; and a GPS shop item that shows the same map
 - **Pixel look.** The minimap matches the game's pixel art: hard-edged palette colours only, point filtering, a whole number of screen
   pixels per map pixel. Do not add smoothing, blending or rotated smooth sprites.
 - A changed default needs `Mod.Migrate` (BepInEx keeps saved values): bump `Debug.ConfigVersion` and move old values once.
-- `Display.Shown` is false by default since 1.0.0: the GPS is how a player gets a map, the screen minimap is opt-in (K or the config).
+- The screen minimap is opt-in since 1.0.0: `Display.Enabled` (default false, read at start) turns it on and is the only thing that adds
+  its K key to Settings > Controls; `Display.Shown` (default true) is whether an enabled minimap is showing, and K flips it. The GPS is
+  how a player gets a map by default.
 - Keep the README's install section clear that only the `MiniMap` folder goes into `HalfGripMods\` (`mod.json` directly inside
   `HalfGripMods\MiniMap\`), not the whole repo download.
 - The GPS's item id `minimap.gps` is saved in runs: never change it.

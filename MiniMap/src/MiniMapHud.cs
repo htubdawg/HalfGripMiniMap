@@ -51,7 +51,7 @@ namespace HalfGripMiniMap
 				{
 					Mod.Shown.Value = !Mod.Shown.Value;
 				}
-				bool show = Mod.Shown.Value && !InteriorMath.Paused;
+				bool show = Mod.Enabled.Value && Mod.Shown.Value && !InteriorMath.Paused;
 				if (show)
 				{
 					Race.Tick();
