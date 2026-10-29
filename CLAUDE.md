@@ -16,11 +16,11 @@ player's car, with a marker per car. Current release: see `MiniMap/mod.json` (`v
 | File | Role |
 |---|---|
 | `Mod.cs` | Config, the toggle key, makes the persistent HUD object |
-| `MiniMapHud.cs` | Finds the race's `TrackManager`, redraws when `lapManager.trackLine` changes, turns the map, moves the car markers |
-| `TrackImage.cs` | Draws the lap from above into a 512 px texture (ground, road, edge lines, start line), fitted inside the round window |
+| `MiniMapHud.cs` | Finds the race's `TrackManager`, redraws the lap when `lapManager.trackLine` changes, gathers the cars each frame, shows the texture |
+| `TrackImage.cs` | The lap from above in flat palette colours (ground, road, edge lines, start line) at 4x the minimap's resolution, fitted inside the round window |
+| `PixelMap.cs` | The shown texture (about 100 px, point filtered): rebuilt each frame by sampling `TrackImage` turned to the player's heading, plus the pixel ring and car markers |
 | `Palettes.cs` | Colours per base scene (from the scene name), shaded by the weather (`WeatherGrip.Current`) |
 | `Sampler.cs` | Colours for unknown scenes, read off the ground under and beside the track line (terrain layers or mesh materials) |
-| `Shapes.cs` | The disc, ring and arrow sprites, drawn in code |
 
 ## Rules that matter
 
@@ -30,7 +30,12 @@ player's car, with a marker per car. Current release: see `MiniMap/mod.json` (`v
 - Bump `version` in `mod.json` with each release and keep the version in `README.md` in step.
 - C# 10 and netstandard2.1 only. Tabs, `///` summaries that explain *why*, `Mod.Info(...)` for verbose logging, `Mod.Log.LogWarning` with a
   try/catch around risky work.
+- **Pixel look.** The minimap matches the game's pixel art: hard-edged palette colours only, point filtering, a whole number of screen
+  pixels per map pixel. Do not add smoothing, blending or rotated smooth sprites.
+- A changed default needs `Mod.Migrate` (BepInEx keeps saved values): bump `Debug.ConfigVersion` and move old values once.
 - Work on a branch and open a PR; do not push to `main`.
+- `docs/preview.png` (the README image) was rendered offline: real ProcTrack laps from its `Generator.Make` run in a console app, drawn
+  by a Python port of `TrackImage` and `PixelMap`. Re-render it when the look changes.
 
 ## Checking changes
 

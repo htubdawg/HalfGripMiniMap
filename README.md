@@ -2,11 +2,14 @@
 Minimap for half grip demo
 100% AI generated code
 
+![The minimap on each map and weather](docs/preview.png)
+
 ============================================================
-MINIMAP  (MiniMap 0.1.0, for Half Grip Demo 0.418)
+MINIMAP  (MiniMap 0.2.0, for Half Grip Demo 0.418)
 ============================================================
 
-A round minimap in the top right corner of the screen during races.
+A round, pixel-art minimap in the top left corner of the screen during races,
+clear of the placement board.
 
   - Shows the whole lap, turned so the way your car points is always up.
   - Your car is the white arrow; bots are red dots, other players in a
@@ -23,6 +26,7 @@ A round minimap in the top right corner of the screen during races.
     The weather shades it too: night darkens it, snow and ash lie over the
     ground. A map in a scene of its own is coloured from its own ground and
     road.
+  - Drawn in square pixels in the map's colours, like the game's own art.
   - Hidden while the game is paused.
 
 KEYS
@@ -34,8 +38,9 @@ INSTALL
 
 SETTINGS  (BepInEx\config\halfgrip.minimap.cfg)
   Display.Shown      show the minimap (the K key flips it)
-  Display.Corner     TopRight, TopLeft, BottomRight or BottomLeft
+  Display.Corner     TopLeft, TopRight, BottomLeft or BottomRight
   Display.Size       width in pixels of a 1080 pixel high screen (300)
+  Display.PixelSize  screen pixels per minimap pixel (3, like the game's art)
   Display.Margin     gap to the screen edges (24)
   Display.Opacity    1 is solid (0.9)
   Debug.VerboseLog   log each map build: scene, colours, lap length
