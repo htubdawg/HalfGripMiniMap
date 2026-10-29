@@ -175,7 +175,7 @@ namespace HalfGripMiniMap
 			Sprite sprite = Sprite.Create(tex, new Rect(0, 0, w, h), pivot, ppu);
 			sprite.name = "GpsIcon";
 			sprite.hideFlags = HideFlags.HideAndDontSave;
-			Mod.Info("GPS: icon " + w + "x" + h + " at " + ppu + " px/unit");
+			Mod.Log.LogInfo("GPS: shop icon " + w + "x" + h + " at " + ppu + " px/unit");
 			return sprite;
 		}
 	}

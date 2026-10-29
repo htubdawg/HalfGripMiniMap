@@ -100,9 +100,9 @@ namespace HalfGripMiniMap
 			Clear();
 			built = Settings();
 			int width = Mathf.Clamp(Mathf.RoundToInt(Mod.GpsWidth.Value / texel), 24, 160);
-			int hole = width - 16;
+			int hole = width - GpsArt.Dash.ExtraWidth;
 			int screen = hole * ScreenDetail;
-			GpsArt.Casing casing = GpsArt.Draw(hole, 4);
+			GpsArt.Casing casing = GpsArt.Draw(hole, hole, GpsArt.Dash);
 			int layer = transform.parent != null ? transform.parent.gameObject.layer : gameObject.layer;
 			gameObject.layer = layer;
 			// The screen glows, so it is unlit. The casing is lit like the rest of the cockpit: the dash's sprites each have their own copy
