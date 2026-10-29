@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HalfGripTools;
@@ -40,7 +42,8 @@ namespace HalfGripMiniMap
 
 		/// <summary>
 		/// BepInEx keeps a setting's saved value when its default changes, so a default that moves is moved here once for configs written
-		/// by an older version. 2 (0.2.0): the minimap went from the top right to the top left, off the placement board.
+		/// by an older version. 2 (0.2.0): the minimap went from the top right to the top left, off the placement board. 3 (0.3.1): the
+		/// GPS grew from 1.9 to 2.6 dash units wide.
 		/// </summary>
 		private static void Migrate(ConfigFile config)
 		{
@@ -52,6 +55,50 @@ namespace HalfGripMiniMap
 					Corner.Value = "TopLeft";
 				}
 				version.Value = 2;
+			}
+			if (version.Value < 3)
+			{
+				if (Mathf.Approximately(GpsWidth.Value, 1.9f))
+				{
+					GpsWidth.Value = 2.6f;
+				}
+				version.Value = 3;
+			}
+		}
+
+		private static ConfigFile config;
+		private static DateTime configWritten;
+		private static float nextConfigCheck;
+
+		/// <summary>
+		/// Re-reads the config file when it has been saved since it was last read, once a second at most, so settings (the GPS's size and
+		/// place above all) can be tuned in a text editor while the game runs. Only this mod's own config file is looked at.
+		/// </summary>
+		internal static void WatchConfig()
+		{
+			if (config == null || Time.unscaledTime < nextConfigCheck)
+			{
+				return;
+			}
+			nextConfigCheck = Time.unscaledTime + 1f;
+			try
+			{
+				DateTime written = File.GetLastWriteTimeUtc(config.ConfigFilePath);
+				if (written != configWritten)
+				{
+					bool first = configWritten == default;
+					configWritten = written;
+					if (!first)
+					{
+						config.Reload();
+						Info("Minimap: config file changed, read it again");
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				Log.LogWarning("Minimap: could not re-read the config file: " + e.Message);
+				config = null;
 			}
 		}
 
@@ -66,11 +113,12 @@ namespace HalfGripMiniMap
 			Margin = ctx.Config.Bind("Display", "Margin", 24, new ConfigDescription("Gap between the minimap and the edges of the screen, in pixels of a 1080 pixel high screen.", new AcceptableValueRange<int>(0, 200)));
 			PixelSize = ctx.Config.Bind("Display", "PixelSize", 3, new ConfigDescription("Screen pixels (of a 1080 pixel high screen) per pixel of the minimap. 3 matches the chunky pixels of the game's own art; 1 is the finest.", new AcceptableValueRange<int>(1, 8)));
 			Opacity = ctx.Config.Bind("Display", "Opacity", 0.9f, new ConfigDescription("How opaque the minimap is: 1 is solid.", new AcceptableValueRange<float>(0.2f, 1f)));
-			GpsWidth = ctx.Config.Bind("GPS", "Width", 1.9f, new ConfigDescription("Width of the GPS on the dash, in the dash's own units (its two module slots are about 2.3 apart). Read when a race starts.", new AcceptableValueRange<float>(0.8f, 4f)));
-			GpsOffsetX = ctx.Config.Bind("GPS", "OffsetX", 0f, "Moves the GPS sideways on the dash from where the magnet would stand (dash units, right is positive). Read when a race starts.");
-			GpsOffsetY = ctx.Config.Bind("GPS", "OffsetY", 0f, "Moves the GPS up or down on the dash from where the magnet would stand (dash units, up is positive). Read when a race starts.");
+			GpsWidth = ctx.Config.Bind("GPS", "Width", 2.6f, new ConfigDescription("Width of the GPS on the dash, in the dash's own units (its two module slots are about 2.3 apart). Takes effect as soon as the file is saved, even mid-race.", new AcceptableValueRange<float>(0.8f, 6f)));
+			GpsOffsetX = ctx.Config.Bind("GPS", "OffsetX", 0f, "Moves the GPS sideways on the dash from where the magnet would stand (dash units, right is positive). Takes effect as soon as the file is saved.");
+			GpsOffsetY = ctx.Config.Bind("GPS", "OffsetY", 0f, "Moves the GPS up or down on the dash from where the magnet would stand (dash units, up is positive). Takes effect as soon as the file is saved.");
 			Verbose = ctx.Config.Bind("Debug", "VerboseLog", false, "Write each map build (the scene, the palette, the size of the lap) to the BepInEx log.");
 			Migrate(ctx.Config);
+			config = ctx.Config;
 
 			Toggle = ctx.Keys.Add(KeyCode.K, "Show / hide minimap", Controls.Section.Race);
 			if (Toggle == null)
@@ -82,14 +130,14 @@ namespace HalfGripMiniMap
 			ctx.OnSceneLoaded(Race.OnSceneLoaded);
 
 			hud = new GameObject("MiniMapHud");
-			Object.DontDestroyOnLoad(hud);
+			UnityEngine.Object.DontDestroyOnLoad(hud);
 			MiniMapHud runner = hud.AddComponent<MiniMapHud>();
 			ctx.OnSceneLoaded(runner.OnSceneLoaded);
 			ctx.OnUnload(() =>
 			{
 				if (hud != null)
 				{
-					Object.Destroy(hud);
+					UnityEngine.Object.Destroy(hud);
 				}
 				hud = null;
 			});
