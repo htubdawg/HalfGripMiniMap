@@ -85,7 +85,7 @@ namespace HalfGripMiniMap
 
 			Measure(basis.interiorPrefab);
 			made.interiorPrefab = BuildPrefab(basis.interiorPrefab);
-			made.image = Icon(basis.image);
+			made.image = Icon(catalog);
 			Mod.Info("GPS: made from '" + basis.id + "' (" + basis.GetType().Name + "), magnet pixel " + Texel.ToString("0.0000") + ", foot " + Foot + ", sorting " + SortingLayer + "/" + SortingOrder + ", lit '" + (Lit != null ? Lit.name : "none") + "', unlit '" + (Unlit != null ? Unlit.name : "none") + "'");
 			return made;
 		}
@@ -158,13 +158,23 @@ namespace HalfGripMiniMap
 			return Prefab;
 		}
 
-		/// <summary>The shop icon, the size of the magnet's (the card is sized to it), with its pivot and pixel density.</summary>
-		private static Sprite Icon(Sprite like)
+		/// <summary>The shop icon's size in pixels: about the size of the other item icons in the inventory bar, with room for the casing.</summary>
+		private const int IconWidth = 26;
+		private const int IconHeight = 24;
+
+		/// <summary>
+		/// The shop icon, drawn at a size of its own (the magnet's is no guide: drawn to its size the GPS came out as a speck). Its pixel
+		/// density is the one most of the catalog's icons share, so its pixels are the size of theirs on the card.
+		/// </summary>
+		private static Sprite Icon(ItemCatalog catalog)
 		{
-			int w = like != null ? Mathf.RoundToInt(like.rect.width) : 32;
-			int h = like != null ? Mathf.RoundToInt(like.rect.height) : 32;
-			Vector2 pivot = like != null ? new Vector2(like.pivot.x / like.rect.width, like.pivot.y / like.rect.height) : new Vector2(0.5f, 0.5f);
-			float ppu = like != null ? like.pixelsPerUnit : 100f;
+			int w = IconWidth;
+			int h = IconHeight;
+			float ppu = catalog.items.Where(i => i != null && i.image != null).GroupBy(i => i.image.pixelsPerUnit).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefault();
+			if (ppu <= 0f)
+			{
+				ppu = 100f;
+			}
 			Texture2D tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
 			tex.name = "GpsIcon";
 			tex.filterMode = FilterMode.Point;
@@ -172,7 +182,7 @@ namespace HalfGripMiniMap
 			tex.hideFlags = HideFlags.HideAndDontSave;
 			tex.SetPixels32(GpsArt.Icon(w, h));
 			tex.Apply(false, true);
-			Sprite sprite = Sprite.Create(tex, new Rect(0, 0, w, h), pivot, ppu);
+			Sprite sprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), ppu);
 			sprite.name = "GpsIcon";
 			sprite.hideFlags = HideFlags.HideAndDontSave;
 			Mod.Info("GPS: shop icon " + w + "x" + h + " at " + ppu + " px/unit");
