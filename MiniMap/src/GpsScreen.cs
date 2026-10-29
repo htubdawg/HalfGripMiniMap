@@ -23,6 +23,8 @@ namespace HalfGripMiniMap
 		private GameObject casingPart;
 		private GameObject screenPart;
 		private SpriteRenderer casingRenderer;
+		private Material casingMaterial;
+		private bool lit;
 		private string built;
 		private bool failed;
 
@@ -50,7 +52,7 @@ namespace HalfGripMiniMap
 		private float texel = FallbackTexel;
 
 		/// <summary>The settings the GPS was last built from.</summary>
-		private static string Settings() => Mod.GpsWidth.Value.ToString("0.000") + "|" + Mod.GpsOffsetX.Value.ToString("0.000") + "|" + Mod.GpsOffsetY.Value.ToString("0.000");
+		private static string Settings() => Mod.GpsWidth.Value.ToString("0.000") + "|" + Mod.GpsOffsetX.Value.ToString("0.000") + "|" + Mod.GpsOffsetY.Value.ToString("0.000") + "|" + Mod.GpsLitCasing.Value;
 
 		/// <summary>
 		/// The cockpit's pixel size: the middle value over every sprite showing on the dash round the GPS. One sprite is not enough: some
@@ -97,14 +99,15 @@ namespace HalfGripMiniMap
 		{
 			Clear();
 			built = Settings();
-			int width = Mathf.Clamp(Mathf.RoundToInt(Mod.GpsWidth.Value / texel), 16, 160);
-			int hole = width - 6;
+			int width = Mathf.Clamp(Mathf.RoundToInt(Mod.GpsWidth.Value / texel), 24, 160);
+			int hole = width - 16;
 			int screen = hole * ScreenDetail;
-			GpsArt.Casing casing = GpsArt.Draw(hole, 2, 4);
+			GpsArt.Casing casing = GpsArt.Draw(hole, 4);
 			int layer = transform.parent != null ? transform.parent.gameObject.layer : gameObject.layer;
 			gameObject.layer = layer;
-			// The dash's lit sprite material does not draw these sprites, so both parts use the unlit one; the casing is dimmed at night
-			// in Update so it is not brighter than the cockpit round it.
+			// The screen glows, so it is unlit. The casing is lit like the rest of the cockpit: the dash's sprites each have their own copy
+			// of the lit material with their own texture in it (the shader reads the material's texture, not the sprite's), so the casing
+			// gets a copy too. LitCasing off falls back to the unlit material, dimmed at night in Update.
 			Material material = Gps.Unlit != null ? Gps.Unlit : Gps.Lit;
 
 			casingTexture = Texture(casing.Width, casing.Height, "GpsCasing");
@@ -112,7 +115,30 @@ namespace HalfGripMiniMap
 			casingTexture.Apply(false, true);
 			casingSprite = Sprite.Create(casingTexture, new Rect(0, 0, casing.Width, casing.Height), new Vector2(0.5f, 0f), 1f / texel, 0, SpriteMeshType.FullRect);
 			Vector3 foot = Gps.Foot + new Vector3(Mod.GpsOffsetX.Value, Mod.GpsOffsetY.Value, 0f);
-			casingRenderer = Part("Casing", casingSprite, material, foot, 0, layer);
+			lit = Mod.GpsLitCasing.Value && Gps.Lit != null;
+			if (lit)
+			{
+				casingMaterial = new Material(Gps.Lit);
+				casingMaterial.name = "GpsCasingLit";
+				casingMaterial.hideFlags = HideFlags.HideAndDontSave;
+				foreach (string name in new[] { "_BaseMap", "_MainTex" })
+				{
+					if (casingMaterial.HasProperty(name))
+					{
+						casingMaterial.SetTexture(name, casingTexture);
+						casingMaterial.SetTextureScale(name, Vector2.one);
+						casingMaterial.SetTextureOffset(name, Vector2.zero);
+					}
+				}
+				foreach (string name in new[] { "_BaseColor", "_Color" })
+				{
+					if (casingMaterial.HasProperty(name))
+					{
+						casingMaterial.SetColor(name, Color.white);
+					}
+				}
+			}
+			casingRenderer = Part("Casing", casingSprite, lit ? casingMaterial : material, foot, 0, layer);
 			casingPart = casingRenderer.gameObject;
 
 			map = new PixelMap(screen, false);
@@ -121,7 +147,7 @@ namespace HalfGripMiniMap
 			screenSprite = Sprite.Create(map.Texture, new Rect(0, 0, screen, screen), new Vector2(0.5f, 0.5f), ScreenDetail / texel, 0, SpriteMeshType.FullRect);
 			Vector3 middle = foot + new Vector3((casing.ScreenX + hole * 0.5f - casing.Width * 0.5f) * texel, (casing.ScreenY + hole * 0.5f) * texel, 0f);
 			screenPart = Part("Screen", screenSprite, material, middle, 1, layer).gameObject;
-			Mod.Log.LogInfo("GPS: on " + (transform.parent != null ? transform.parent.name : "?") + ", " + casing.Width + "x" + casing.Height + " px casing, " + screen + " px screen, " + (casing.Width * texel).ToString("0.00") + " units wide, foot " + foot.ToString("0.00") + ", material '" + (material != null ? material.name : "default") + "'");
+			Mod.Log.LogInfo("GPS: on " + (transform.parent != null ? transform.parent.name : "?") + ", " + casing.Width + "x" + casing.Height + " px casing, " + screen + " px screen, " + (casing.Width * texel).ToString("0.00") + " units wide, foot " + foot.ToString("0.00") + ", casing material '" + (lit ? Gps.Lit.name + "' (" + Gps.Lit.shader.name + ", own copy)" : (material != null ? material.name : "default") + "'"));
 		}
 
 		/// <summary>
@@ -199,7 +225,7 @@ namespace HalfGripMiniMap
 					Build();
 				}
 				WeatherProfile weather = WeatherGrip.Current ?? RunState.ActiveWeather;
-				float shade = weather != null && weather.headlightsActive ? 0.6f : 1f;
+				float shade = !lit && weather != null && weather.headlightsActive ? 0.6f : 1f;
 				casingRenderer.color = new Color(shade, shade, shade, 1f);
 
 				Race.Tick();
@@ -245,6 +271,11 @@ namespace HalfGripMiniMap
 			{
 				Destroy(screenSprite);
 			}
+			if (casingMaterial != null)
+			{
+				Destroy(casingMaterial);
+			}
+			casingMaterial = null;
 			casingPart = screenPart = null;
 			casingTexture = null;
 			casingSprite = screenSprite = null;

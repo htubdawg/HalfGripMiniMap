@@ -3,97 +3,162 @@ using UnityEngine;
 namespace HalfGripMiniMap
 {
 	/// <summary>
-	/// The GPS's pixel art, drawn in code so it fits whatever size the dash and the shop card need: the casing that stands on the dash
-	/// (a dark plastic box on a short stand, a recessed square screen, a green light and two buttons on the chin) and the shop icon (the
-	/// same box with a lap on its screen). Pixel arrays only, rows from the bottom; the caller makes the textures.
+	/// The GPS's pixel art, drawn in code so it fits whatever size the dash and the shop card need, in the manner of the other items on
+	/// the dash (the jumper's key cap above all): a chunky grey plastic box seen a little from above and to the left, so its top and right
+	/// side show, with a speckled surface, a recessed screen, a green light and two buttons on its chin, standing on a dark base plate.
+	/// Pixel arrays only, rows from the bottom; the caller makes the textures.
 	/// </summary>
 	internal static class GpsArt
 	{
-		private static readonly Color32 Body = new Color32(58, 58, 64, 255);
-		private static readonly Color32 Light = new Color32(88, 88, 96, 255);
-		private static readonly Color32 Shade = new Color32(40, 40, 45, 255);
-		private static readonly Color32 Recess = new Color32(22, 22, 26, 255);
-		private static readonly Color32 Stand = new Color32(32, 32, 36, 255);
+		private static readonly Color32 Front = new Color32(132, 132, 138, 255);
+		private static readonly Color32 FrontLow = new Color32(110, 110, 116, 255);
+		private static readonly Color32 Top = new Color32(178, 178, 184, 255);
+		private static readonly Color32 Side = new Color32(86, 86, 92, 255);
+		private static readonly Color32 RecessDark = new Color32(26, 26, 30, 255);
+		private static readonly Color32 RecessLight = new Color32(62, 62, 68, 255);
+		private static readonly Color32 Plate = new Color32(46, 46, 50, 255);
+		private static readonly Color32 PlateTop = new Color32(72, 72, 78, 255);
 		private static readonly Color32 Led = new Color32(96, 224, 96, 255);
-		private static readonly Color32 Button = new Color32(112, 112, 120, 255);
+		private static readonly Color32 Button = new Color32(70, 70, 76, 255);
 		private static readonly Color32 Clear = new Color32(0, 0, 0, 0);
 
-		/// <summary>A casing round a square screen <paramref name="screen"/> pixels wide.</summary>
+		/// <summary>Rows of top face and columns of side face that show.</summary>
+		private const int TopRows = 3;
+		private const int SideColumns = 2;
+		/// <summary>Rows of base plate, and how far it reaches past the box on each side.</summary>
+		private const int PlateRows = 3;
+		private const int PlateReach = 3;
+
+		/// <summary>A casing round a square screen hole.</summary>
 		internal sealed class Casing
 		{
 			public Color32[] Pixels;
 			public int Width;
 			public int Height;
-			/// <summary>The screen's bottom left pixel.</summary>
+			/// <summary>The screen hole's bottom left pixel.</summary>
 			public int ScreenX;
 			public int ScreenY;
 		}
 
-		/// <param name="screen">Width of the screen in pixels.</param>
-		/// <param name="stand">Rows of stand under the box.</param>
-		/// <param name="chin">Rows of chin between the box's bottom edge and the screen's recess.</param>
-		internal static Casing Draw(int screen, int stand, int chin)
+		/// <param name="screen">Width of the screen hole in pixels.</param>
+		/// <param name="chin">Rows between the box's bottom edge and the screen's recess.</param>
+		internal static Casing Draw(int screen, int chin)
 		{
-			// Each side of the screen: its recess, a pixel of body and the outline.
-			int w = screen + 6;
-			int screenY = stand + 1 + chin + 1;
-			int h = screenY + screen + 3;
-			Color32[] px = new Color32[w * h];
-			for (int i = 0; i < px.Length; i++)
-			{
-				px[i] = Clear;
-			}
+			int fw = screen + 8;            // outline, two of plastic, the recess, the screen, and the same on the other side
+			int fh = screen + chin + 6;     // outline, chin, recess, screen, recess, two of plastic, outline
+			int ox = PlateReach;
+			int py = PlateRows - 1;         // the box stands on the plate's top row
+			int w = ox + fw + SideColumns + PlateReach;
+			int h = py + fh + TopRows;
+			// 0 outside, 1 front, 2 top, 3 side, 4 plate.
+			byte[] face = new byte[w * h];
 
-			// The stand: a short dark neck in the middle, under the box.
-			int sw = Mathf.Max(4, w / 3);
-			int sx = (w - sw) / 2;
-			for (int y = 0; y < stand; y++)
-			{
-				for (int x = sx; x < sx + sw; x++)
-				{
-					px[y * w + x] = x == sx || x == sx + sw - 1 ? PixelMap.Outline : Stand;
-				}
-			}
-
-			// The box, its corners cut for a rounded look, lit along the top and shaded along the bottom.
-			int bottom = stand;
-			int top = h - 1;
-			for (int y = bottom; y <= top; y++)
+			for (int y = 0; y < PlateRows; y++)
 			{
 				for (int x = 0; x < w; x++)
 				{
-					bool edgeX = x == 0 || x == w - 1;
-					bool edgeY = y == bottom || y == top;
-					if (edgeX && edgeY)
+					face[y * w + x] = 4;
+				}
+			}
+			for (int y = 0; y < fh; y++)
+			{
+				for (int x = 0; x < fw; x++)
+				{
+					face[(py + y) * w + ox + x] = 1;
+				}
+			}
+			// The top face: each row up is shifted right, as a box seen from above and to the left.
+			for (int j = 0; j < TopRows; j++)
+			{
+				int shift = (j + 1) * SideColumns / TopRows;
+				for (int x = 0; x < fw; x++)
+				{
+					face[(py + fh + j) * w + ox + x + shift] = 2;
+				}
+			}
+			// The side face: each column right is shifted up the same way.
+			for (int c = 0; c < SideColumns; c++)
+			{
+				int shift = (c + 1) * TopRows / SideColumns;
+				for (int y = 0; y < fh; y++)
+				{
+					int at = (py + y + shift) * w + ox + fw + c;
+					if (face[at] == 0)
 					{
-						continue;
+						face[at] = 3;
 					}
-					Color32 c = edgeX || edgeY ? PixelMap.Outline : y == top - 1 ? Light : y == bottom + 1 ? Shade : Body;
-					px[y * w + x] = c;
 				}
 			}
 
-			// The recess the screen sits in: one dark pixel all round it.
-			for (int y = screenY - 1; y <= screenY + screen; y++)
+			Color32[] px = new Color32[w * h];
+			for (int y = 0; y < h; y++)
 			{
-				for (int x = 2; x <= w - 3; x++)
+				for (int x = 0; x < w; x++)
 				{
-					px[y * w + x] = Recess;
+					int f = face[y * w + x];
+					if (f == 0)
+					{
+						px[y * w + x] = Clear;
+						continue;
+					}
+					if (Edge(face, w, h, x, y))
+					{
+						px[y * w + x] = PixelMap.Outline;
+						continue;
+					}
+					Color32 c = f == 1 ? (y < py + 1 + chin ? FrontLow : Front) : f == 2 ? Top : f == 3 ? Side : y == PlateRows - 1 ? PlateTop : Plate;
+					px[y * w + x] = Speckle(c, x, y, f != 4);
+				}
+			}
+
+			// The screen's recess: dark along its top and left, lighter along its bottom and right, so it reads as set into the box.
+			int sx = ox + 4;
+			int sy = py + chin + 2;
+			for (int y = sy - 1; y <= sy + screen; y++)
+			{
+				for (int x = sx - 1; x <= sx + screen; x++)
+				{
+					bool light = y == sy - 1 || x == sx + screen;
+					px[y * w + x] = light ? RecessLight : RecessDark;
 				}
 			}
 
 			// The chin: a green light on the left, two buttons on the right.
 			if (chin >= 2)
 			{
-				int cy = bottom + 1 + chin / 2;
-				px[cy * w + 3] = Led;
-				if (w >= 16)
+				int cy = py + 1 + chin / 2;
+				px[cy * w + sx] = Led;
+				if (fw >= 18)
 				{
-					px[cy * w + (w - 5)] = Button;
-					px[cy * w + (w - 8)] = Button;
+					int bx = ox + fw - 5;
+					px[cy * w + bx] = Button;
+					px[cy * w + bx - 1] = Button;
+					px[cy * w + bx - 4] = Button;
+					px[cy * w + bx - 5] = Button;
 				}
 			}
-			return new Casing { Pixels = px, Width = w, Height = h, ScreenX = 3, ScreenY = screenY };
+			return new Casing { Pixels = px, Width = w, Height = h, ScreenX = sx, ScreenY = sy };
+		}
+
+		/// <summary>A pixel of the shape with a pixel of nothing beside it: drawn as the outline.</summary>
+		private static bool Edge(byte[] face, int w, int h, int x, int y)
+		{
+			return x == 0 || y == 0 || x == w - 1 || y == h - 1 || face[y * w + x - 1] == 0 || face[y * w + x + 1] == 0 || face[(y - 1) * w + x] == 0 || face[(y + 1) * w + x] == 0;
+		}
+
+		/// <summary>The rough, speckled surface of the cockpit's pixel art: each pixel a little lighter or darker, and the odd scuff.</summary>
+		private static Color32 Speckle(Color32 c, int x, int y, bool scuffs)
+		{
+			uint hash = (uint)(x * 73856093) ^ (uint)(y * 19349663);
+			hash ^= hash >> 13;
+			hash *= 0x5bd1e995;
+			hash ^= hash >> 15;
+			int d = (int)(hash % 13) - 6;
+			if (scuffs && hash % 29 == 0)
+			{
+				d -= 22;
+			}
+			return new Color32((byte)Mathf.Clamp(c.r + d, 0, 255), (byte)Mathf.Clamp(c.g + d, 0, 255), (byte)Mathf.Clamp(c.b + d, 0, 255), 255);
 		}
 
 		/// <summary>The shop icon, <paramref name="w"/> by <paramref name="h"/>: the GPS with a lap and the player's arrow on its screen.</summary>
@@ -104,14 +169,13 @@ namespace HalfGripMiniMap
 			{
 				px[i] = Clear;
 			}
-			int stand = h >= 24 ? 2 : 1;
 			int chin = h >= 24 ? 3 : 2;
-			int screen = Mathf.Min(w - 8, h - 2 - (stand + chin + 5));
+			int screen = Mathf.Min(w - 2 - (8 + SideColumns + 2 * PlateReach), h - 2 - (PlateRows - 1 + chin + 6 + TopRows));
 			if (screen < 6)
 			{
 				return px;
 			}
-			Casing casing = Draw(screen, stand, chin);
+			Casing casing = Draw(screen, chin);
 			int ox = (w - casing.Width) / 2;
 			int oy = (h - casing.Height) / 2;
 			Blit(casing.Pixels, casing.Width, casing.Height, px, w, h, ox, oy);

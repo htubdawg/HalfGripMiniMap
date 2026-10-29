@@ -26,6 +26,7 @@ namespace HalfGripMiniMap
 		internal static ConfigEntry<float> GpsWidth;
 		internal static ConfigEntry<float> GpsOffsetX;
 		internal static ConfigEntry<float> GpsOffsetY;
+		internal static ConfigEntry<bool> GpsLitCasing;
 		internal static ConfigEntry<bool> Verbose;
 		internal static ModKey Toggle;
 
@@ -44,6 +45,7 @@ namespace HalfGripMiniMap
 		/// BepInEx keeps a setting's saved value when its default changes, so a default that moves is moved here once for configs written
 		/// by an older version. 2 (0.2.0): the minimap went from the top right to the top left, off the placement board. 3 (0.3.1): the
 		/// GPS grew from 1.9 to 2.6 dash units wide. 4 (0.3.2): 1.6, now that its pixels are measured right.
+		/// 5 (0.3.3): 1.9 wide and 0.6 lower, to match the jumper's key cap beside it.
 		/// </summary>
 		private static void Migrate(ConfigFile config)
 		{
@@ -71,6 +73,18 @@ namespace HalfGripMiniMap
 					GpsWidth.Value = 1.6f;
 				}
 				version.Value = 4;
+			}
+			if (version.Value < 5)
+			{
+				if (Mathf.Approximately(GpsWidth.Value, 1.6f))
+				{
+					GpsWidth.Value = 1.9f;
+				}
+				if (Mathf.Approximately(GpsOffsetY.Value, 0f))
+				{
+					GpsOffsetY.Value = -0.6f;
+				}
+				version.Value = 5;
 			}
 		}
 
@@ -121,9 +135,10 @@ namespace HalfGripMiniMap
 			Margin = ctx.Config.Bind("Display", "Margin", 24, new ConfigDescription("Gap between the minimap and the edges of the screen, in pixels of a 1080 pixel high screen.", new AcceptableValueRange<int>(0, 200)));
 			PixelSize = ctx.Config.Bind("Display", "PixelSize", 3, new ConfigDescription("Screen pixels (of a 1080 pixel high screen) per pixel of the minimap. 3 matches the chunky pixels of the game's own art; 1 is the finest.", new AcceptableValueRange<int>(1, 8)));
 			Opacity = ctx.Config.Bind("Display", "Opacity", 0.9f, new ConfigDescription("How opaque the minimap is: 1 is solid.", new AcceptableValueRange<float>(0.2f, 1f)));
-			GpsWidth = ctx.Config.Bind("GPS", "Width", 1.6f, new ConfigDescription("Width of the GPS on the dash, in the dash's own units (its two module slots are about 2.3 apart). Takes effect as soon as the file is saved, even mid-race.", new AcceptableValueRange<float>(0.8f, 6f)));
+			GpsWidth = ctx.Config.Bind("GPS", "Width", 1.9f, new ConfigDescription("Width of the GPS on the dash, in the dash's own units (its two module slots are about 2.3 apart). Takes effect as soon as the file is saved, even mid-race.", new AcceptableValueRange<float>(0.8f, 6f)));
 			GpsOffsetX = ctx.Config.Bind("GPS", "OffsetX", 0f, "Moves the GPS sideways on the dash from where the magnet would stand (dash units, right is positive). Takes effect as soon as the file is saved.");
-			GpsOffsetY = ctx.Config.Bind("GPS", "OffsetY", 0f, "Moves the GPS up or down on the dash from where the magnet would stand (dash units, up is positive). Takes effect as soon as the file is saved.");
+			GpsOffsetY = ctx.Config.Bind("GPS", "OffsetY", -0.6f, "Moves the GPS up or down on the dash from where the magnet would stand (dash units, up is positive). Takes effect as soon as the file is saved.");
+			GpsLitCasing = ctx.Config.Bind("GPS", "LitCasing", true, "Light the GPS's casing like the rest of the cockpit. Turn it off if the casing does not show (its screen still does). Takes effect as soon as the file is saved.");
 			Verbose = ctx.Config.Bind("Debug", "VerboseLog", false, "Write each map build (the scene, the palette, the size of the lap) to the BepInEx log.");
 			Migrate(ctx.Config);
 			config = ctx.Config;
