@@ -45,7 +45,8 @@ namespace HalfGripMiniMap
 		/// BepInEx keeps a setting's saved value when its default changes, so a default that moves is moved here once for configs written
 		/// by an older version. 2 (0.2.0): the minimap went from the top right to the top left, off the placement board. 3 (0.3.1): the
 		/// GPS grew from 1.9 to 2.6 dash units wide. 4 (0.3.2): 1.6, now that its pixels are measured right.
-		/// 5 (0.3.3): 1.9 wide and 0.6 lower, to match the jumper's key cap beside it.
+		/// 5 (0.3.3): 1.9 wide and 0.6 lower, to match the jumper's key cap beside it. 6 (1.0.0): the screen minimap is off by
+		/// default for the release, so it is switched off once in configs from the test versions.
 		/// </summary>
 		private static void Migrate(ConfigFile config)
 		{
@@ -85,6 +86,11 @@ namespace HalfGripMiniMap
 					GpsOffsetY.Value = -0.6f;
 				}
 				version.Value = 5;
+			}
+			if (version.Value < 6)
+			{
+				Shown.Value = false;
+				version.Value = 6;
 			}
 		}
 
@@ -128,8 +134,8 @@ namespace HalfGripMiniMap
 		{
 			Log = ctx.Log;
 
-			// TODO for release: off by default, so the GPS is how a player gets a map; the screen minimap stays a setting.
-			Shown = ctx.Config.Bind("Display", "Shown", true, "Show the minimap on the screen in races. The toggle key (Settings > Controls, K by default) flips this. The GPS item shows a map on the dash either way.");
+			// Off by default: the GPS is how a player gets a map; the screen minimap is there for whoever wants it.
+			Shown = ctx.Config.Bind("Display", "Shown", false, "Show the minimap on the screen in races. The toggle key (Settings > Controls, K by default) flips this. The GPS item shows a map on the dash either way.");
 			Corner = ctx.Config.Bind("Display", "Corner", "TopLeft", new ConfigDescription("The corner of the screen the minimap sits in. The race's placement board is in the top right.", new AcceptableValueList<string>("TopLeft", "TopRight", "BottomLeft", "BottomRight")));
 			Size = ctx.Config.Bind("Display", "Size", 300, new ConfigDescription("Width of the minimap, in pixels of a 1080 pixel high screen (it scales with the screen).", new AcceptableValueRange<int>(120, 700)));
 			Margin = ctx.Config.Bind("Display", "Margin", 24, new ConfigDescription("Gap between the minimap and the edges of the screen, in pixels of a 1080 pixel high screen.", new AcceptableValueRange<int>(0, 200)));
