@@ -21,6 +21,9 @@ namespace HalfGripMiniMap
 		internal static ConfigEntry<int> Margin;
 		internal static ConfigEntry<int> PixelSize;
 		internal static ConfigEntry<float> Opacity;
+		internal static ConfigEntry<float> GpsWidth;
+		internal static ConfigEntry<float> GpsOffsetX;
+		internal static ConfigEntry<float> GpsOffsetY;
 		internal static ConfigEntry<bool> Verbose;
 		internal static ModKey Toggle;
 
@@ -56,12 +59,16 @@ namespace HalfGripMiniMap
 		{
 			Log = ctx.Log;
 
-			Shown = ctx.Config.Bind("Display", "Shown", true, "Show the minimap in races. The toggle key (Settings > Controls, K by default) flips this.");
+			// TODO for release: off by default, so the GPS is how a player gets a map; the screen minimap stays a setting.
+			Shown = ctx.Config.Bind("Display", "Shown", true, "Show the minimap on the screen in races. The toggle key (Settings > Controls, K by default) flips this. The GPS item shows a map on the dash either way.");
 			Corner = ctx.Config.Bind("Display", "Corner", "TopLeft", new ConfigDescription("The corner of the screen the minimap sits in. The race's placement board is in the top right.", new AcceptableValueList<string>("TopLeft", "TopRight", "BottomLeft", "BottomRight")));
 			Size = ctx.Config.Bind("Display", "Size", 300, new ConfigDescription("Width of the minimap, in pixels of a 1080 pixel high screen (it scales with the screen).", new AcceptableValueRange<int>(120, 700)));
 			Margin = ctx.Config.Bind("Display", "Margin", 24, new ConfigDescription("Gap between the minimap and the edges of the screen, in pixels of a 1080 pixel high screen.", new AcceptableValueRange<int>(0, 200)));
 			PixelSize = ctx.Config.Bind("Display", "PixelSize", 3, new ConfigDescription("Screen pixels (of a 1080 pixel high screen) per pixel of the minimap. 3 matches the chunky pixels of the game's own art; 1 is the finest.", new AcceptableValueRange<int>(1, 8)));
 			Opacity = ctx.Config.Bind("Display", "Opacity", 0.9f, new ConfigDescription("How opaque the minimap is: 1 is solid.", new AcceptableValueRange<float>(0.2f, 1f)));
+			GpsWidth = ctx.Config.Bind("GPS", "Width", 1.9f, new ConfigDescription("Width of the GPS on the dash, in the dash's own units (its two module slots are about 2.3 apart). Read when a race starts.", new AcceptableValueRange<float>(0.8f, 4f)));
+			GpsOffsetX = ctx.Config.Bind("GPS", "OffsetX", 0f, "Moves the GPS sideways on the dash from where the magnet would stand (dash units, right is positive). Read when a race starts.");
+			GpsOffsetY = ctx.Config.Bind("GPS", "OffsetY", 0f, "Moves the GPS up or down on the dash from where the magnet would stand (dash units, up is positive). Read when a race starts.");
 			Verbose = ctx.Config.Bind("Debug", "VerboseLog", false, "Write each map build (the scene, the palette, the size of the lap) to the BepInEx log.");
 			Migrate(ctx.Config);
 
@@ -70,6 +77,9 @@ namespace HalfGripMiniMap
 			{
 				Log.LogWarning("The minimap's toggle key K belongs to the game or another mod; the minimap can still be switched in the config (Display.Shown).");
 			}
+
+			Gps.Register(ctx);
+			ctx.OnSceneLoaded(Race.OnSceneLoaded);
 
 			hud = new GameObject("MiniMapHud");
 			Object.DontDestroyOnLoad(hud);

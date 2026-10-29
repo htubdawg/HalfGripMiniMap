@@ -1,7 +1,7 @@
 # HalfGripMiniMap
 
 A Half Grip (Steam app 4163270, Unity, Windows) mod: a round minimap in a corner of the screen that shows the whole lap, turned with the
-player's car, with a marker per car. Current release: see `MiniMap/mod.json` (`version`, `gameVersion`).
+player's car, with a marker per car; and a GPS shop item that shows the same map on a screen on the dash. Current release: see `MiniMap/mod.json` (`version`, `gameVersion`).
 
 ## How the mod runs
 
@@ -15,10 +15,14 @@ player's car, with a marker per car. Current release: see `MiniMap/mod.json` (`v
 
 | File | Role |
 |---|---|
-| `Mod.cs` | Config, the toggle key, makes the persistent HUD object |
-| `MiniMapHud.cs` | Finds the race's `TrackManager`, redraws the lap when `lapManager.trackLine` changes, gathers the cars each frame, shows the texture |
+| `Mod.cs` | Config, the toggle key, registers the GPS, makes the persistent HUD object |
+| `Race.cs` | Shared by both maps: finds the race's `TrackManager`, bumps `Version` when `lapManager.trackLine` or the colours change, gathers the cars each frame; `LapCache` keeps each map's `TrackImage` |
+| `MiniMapHud.cs` | The screen minimap: a round `PixelMap` on an overlay canvas in a corner |
+| `Gps.cs` | The GPS item: a clone of the magnet item (no code of its own, MEDIUM, module mount) with its exterior and stats stripped, a new interior prefab and a drawn icon; measures the dash's pixel size from the magnet's sprites |
+| `GpsScreen.cs` | The GPS on the dash (made by the game's `LoadoutSpawner` from the prefab): a lit casing sprite and an unlit screen sprite showing a square `PixelMap` |
+| `GpsArt.cs` | The GPS casing and shop icon, drawn as pixel arrays |
 | `TrackImage.cs` | The lap from above in flat palette colours (ground, road, edge lines, start line) at 4x the minimap's resolution, fitted inside the round window |
-| `PixelMap.cs` | The shown texture (about 100 px, point filtered): rebuilt each frame by sampling `TrackImage` turned to the player's heading, plus the pixel ring and car markers |
+| `PixelMap.cs` | A shown map (point filtered, round or square): rebuilt each frame by sampling `TrackImage` turned to the player's heading, plus the ring and car markers |
 | `Palettes.cs` | Colours per base scene (from the scene name), shaded by the weather (`WeatherGrip.Current`) |
 | `Sampler.cs` | Colours for unknown scenes, read off the ground under and beside the track line (terrain layers or mesh materials) |
 
@@ -33,9 +37,13 @@ player's car, with a marker per car. Current release: see `MiniMap/mod.json` (`v
 - **Pixel look.** The minimap matches the game's pixel art: hard-edged palette colours only, point filtering, a whole number of screen
   pixels per map pixel. Do not add smoothing, blending or rotated smooth sprites.
 - A changed default needs `Mod.Migrate` (BepInEx keeps saved values): bump `Debug.ConfigVersion` and move old values once.
+- **Release:** `Display.Shown` goes to false by default before release (the GPS is then how a player gets a map), with a `Mod.Migrate` step.
+- The GPS's item id `minimap.gps` is saved in runs: never change it.
 - Work on a branch and open a PR; do not push to `main`.
 - `docs/preview.png` (the README image) was rendered offline: real ProcTrack laps from its `Generator.Make` run in a console app, drawn
-  by a Python port of `TrackImage` and `PixelMap`. Re-render it when the look changes.
+  by a Python port of `TrackImage` and `PixelMap`. Re-render it when the look changes. `docs/gps.png` was made by compiling the mod's
+  own `GpsArt`, `PixelMap`, `TrackImage` and `Palettes` into a console app against `UnityEngine.CoreModule` (their drawing is plain
+  pixel arrays) and running it on a ProcTrack lap.
 
 ## Checking changes
 
