@@ -31,13 +31,17 @@ player's car, with a marker per car; and a GPS shop item that shows the same map
 - **Any map.** Never depend on one map's objects: the track line (`PathManager.sampledPoints`, a closed loop) and the leaderboard's cars are
   all the map needs. ProcTrack replaces the line after the scene loads, which is why the HUD re-checks it twice a second.
 - The base map is told from the **scene** name, not the run map entry, so mods that reuse a game scene get that scene's colours.
-- Bump `version` in `mod.json` with each release and keep the version in `README.md` in step.
+- Bump `version` in `mod.json` with each release and keep the version at the top of `README.md` in step.
 - C# 10 and netstandard2.1 only. Tabs, `///` summaries that explain *why*, `Mod.Info(...)` for verbose logging, `Mod.Log.LogWarning` with a
   try/catch around risky work.
 - **Pixel look.** The minimap matches the game's pixel art: hard-edged palette colours only, point filtering, a whole number of screen
   pixels per map pixel. Do not add smoothing, blending or rotated smooth sprites.
 - A changed default needs `Mod.Migrate` (BepInEx keeps saved values): bump `Debug.ConfigVersion` and move old values once.
-- **Release:** `Display.Shown` goes to false by default before release (the GPS is then how a player gets a map), with a `Mod.Migrate` step.
+- The screen minimap is opt-in since 1.0.0: `Display.Enabled` (default false, read at start) turns it on and is the only thing that adds
+  its K key to Settings > Controls. K hides and shows it for the session only (not saved). The GPS is how a player gets a map by
+  default.
+- Keep the README's install section clear that only the `MiniMap` folder goes into `HalfGripMods\` (`mod.json` directly inside
+  `HalfGripMods\MiniMap\`), not the whole repo download.
 - The GPS's item id `minimap.gps` is saved in runs: never change it.
 - Work on a branch and open a PR; do not push to `main`.
 - `docs/preview.png` (the README image) was rendered offline: real ProcTrack laps from its `Generator.Make` run in a console app, drawn

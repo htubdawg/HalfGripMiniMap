@@ -17,6 +17,8 @@ namespace HalfGripMiniMap
 		private PixelMap pixels;
 		private readonly LapCache lap = new LapCache();
 		private bool failed;
+		/// <summary>Whether K has the minimap showing: for this game only, so an enabled minimap is always there when the game starts.</summary>
+		private bool shown = true;
 
 		internal void OnSceneLoaded(Scene loaded)
 		{
@@ -49,9 +51,9 @@ namespace HalfGripMiniMap
 				Mod.WatchConfig();
 				if (Mod.Toggle != null && Mod.Toggle.Down)
 				{
-					Mod.Shown.Value = !Mod.Shown.Value;
+					shown = !shown;
 				}
-				bool show = Mod.Shown.Value && !InteriorMath.Paused;
+				bool show = Mod.Enabled.Value && shown && !InteriorMath.Paused;
 				if (show)
 				{
 					Race.Tick();

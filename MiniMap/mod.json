@@ -1,9 +1,9 @@
 {
   "id": "minimap",
   "name": "MiniMap",
-  "version": "0.3.3",
+  "version": "1.0.0",
   "author": "Claude - Oretsej",
-  "description": "A pixel-art minimap of the whole lap, turned with your car, with every racer on it: on the screen, and on a GPS you can buy for the dash. Drawn from the race's own track line, so it works on the game's maps and on modded ones (ProcTrack and others), coloured to match the map.",
+  "description": "A pixel-art map of the whole lap, turned with your car, with every racer on it: on a GPS you buy for the dash, and on the screen if you switch it on (K). Works on the game's maps and on modded ones, coloured to match the map.",
   "gameVersion": "0.418",
   "tools": "1.0.2"
 }
