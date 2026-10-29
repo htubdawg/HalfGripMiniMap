@@ -42,8 +42,8 @@ namespace HalfGripMiniMap
 		}
 
 		internal static readonly Style Dash = new Style { TopRows = 3, SideColumns = 2, PlateRows = 3, PlateReach = 3, Body = 2, Chin = 4 };
+		/// <summary>The shop icon's: the same box, thinner, so a card-sized icon still has a screen worth the name.</summary>
 		private static readonly Style Card = new Style { TopRows = 2, SideColumns = 1, PlateRows = 2, PlateReach = 2, Body = 1, Chin = 3 };
-		private static readonly Style Tiny = new Style { TopRows = 1, SideColumns = 1, PlateRows = 2, PlateReach = 1, Body = 1, Chin = 2 };
 
 		/// <summary>A casing round a screen hole.</summary>
 		internal sealed class Casing
@@ -178,11 +178,7 @@ namespace HalfGripMiniMap
 			return new Color32((byte)Mathf.Clamp(c.r + d, 0, 255), (byte)Mathf.Clamp(c.g + d, 0, 255), (byte)Mathf.Clamp(c.b + d, 0, 255), 255);
 		}
 
-		/// <summary>
-		/// The shop icon, <paramref name="w"/> by <paramref name="h"/> (the size of the magnet's, which the card is sized to): the GPS with a
-		/// lap and the player's arrow on its screen. The box is drawn in the chunkiest style that still leaves a screen worth the name, so a
-		/// small card still shows one; if not even the smallest fits, just the screen in an outline.
-		/// </summary>
+		/// <summary>The shop icon, <paramref name="w"/> by <paramref name="h"/>: the GPS in its card style, a lap and the player's arrow on its screen.</summary>
 		internal static Color32[] Icon(int w, int h)
 		{
 			Color32[] px = new Color32[w * h];
@@ -190,34 +186,13 @@ namespace HalfGripMiniMap
 			{
 				px[i] = Clear;
 			}
-			foreach (Style style in new[] { Dash, Card, Tiny })
-			{
-				// No wider than twice its height: a GPS, not a letterbox.
-				int sh = h - 2 - style.ExtraHeight;
-				int sw = Mathf.Min(w - 2 - style.ExtraWidth, sh * 2);
-				if (sw >= 6 && sh >= 4)
-				{
-					Casing casing = Draw(sw, sh, style);
-					int ox = (w - casing.Width) / 2;
-					int oy = (h - casing.Height) / 2;
-					Blit(casing.Pixels, casing.Width, casing.Height, px, w, h, ox, oy);
-					Lap(px, w, h, ox + casing.ScreenX, oy + casing.ScreenY, sw, sh);
-					return px;
-				}
-			}
-			// The bare screen in an outline, centred, no wider than twice its height.
-			int bh = Mathf.Max(1, h - 4);
-			int bw = Mathf.Max(1, Mathf.Min(w - 4, bh * 2));
-			int bx = (w - bw) / 2;
-			int by = (h - bh) / 2;
-			for (int y = by - 1; y <= by + bh; y++)
-			{
-				for (int x = bx - 1; x <= bx + bw; x++)
-				{
-					Put(px, w, h, x, y, PixelMap.Outline);
-				}
-			}
-			Lap(px, w, h, bx, by, bw, bh);
+			int sh = h - 2 - Card.ExtraHeight;
+			int sw = Mathf.Min(w - 2 - Card.ExtraWidth, sh * 2);
+			Casing casing = Draw(sw, sh, Card);
+			int ox = (w - casing.Width) / 2;
+			int oy = (h - casing.Height) / 2;
+			Blit(casing.Pixels, casing.Width, casing.Height, px, w, h, ox, oy);
+			Lap(px, w, h, ox + casing.ScreenX, oy + casing.ScreenY, sw, sh);
 			return px;
 		}
 
