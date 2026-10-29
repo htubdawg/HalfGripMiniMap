@@ -19,7 +19,7 @@ as red dots and other players as blue dots. It has no other effect, so it costs 
 ## The screen minimap
 
 The same map in a corner of the screen (top left, clear of the placement board). It is **off by default**. To use it, set
-`Display.Enabled = true` in the config and restart the game. Then **K** shows or hides it in a race.
+`Display.Enabled = true` in the config and restart the game. It then shows in every race, and **K** hides or shows it.
 
 ![The minimap on each map and weather](docs/preview.png)
 
@@ -88,7 +88,6 @@ saved, so you can change these while the game runs (all but `Display.Enabled`, w
 | Setting | Default | What it does |
 |---|---|---|
 | `Display.Enabled` | `false` | Use the screen minimap and add its K key to Settings > Controls (restart after changing it) |
-| `Display.Shown` | `true` | Whether the screen minimap is showing (K flips it) |
 | `Display.Corner` | `TopLeft` | `TopLeft`, `TopRight`, `BottomLeft` or `BottomRight` |
 | `Display.Size` | `300` | Width, in pixels of a 1080 pixel high screen |
 | `Display.PixelSize` | `3` | Screen pixels per map pixel (3 matches the game's art) |
