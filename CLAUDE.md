@@ -44,6 +44,9 @@ player's car, with a marker per car; and a GPS shop item that shows the same map
 - Keep the README's install section clear that only the `MiniMap` folder goes into `HalfGripMods\` (`mod.json` directly inside
   `HalfGripMods\MiniMap\`), not the whole repo download.
 - The GPS's item id `minimap.gps` is saved in runs: never change it.
+- `MiniMap/icon.png` is the mod's picture (`"icon"` in `mod.json`, shown by the HalfGripTools 1.0.5+ mod manager and by installers):
+  128x128, the GPS in its card style with a ProcTrack lap on its screen, made with the same console app as `docs/gps.png` from the
+  mod's own `GpsArt` and `PixelMap`. Older loaders ignore the field, so `tools` stays 1.0.2.
 - Work on a branch and open a PR; do not push to `main`.
 - `docs/preview.png` (the README image) was rendered offline: real ProcTrack laps from its `Generator.Make` run in a console app, drawn
   by a Python port of `TrackImage` and `PixelMap`. Re-render it when the look changes. `docs/gps.png` was made by compiling the mod's
