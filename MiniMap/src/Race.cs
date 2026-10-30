@@ -38,10 +38,10 @@ namespace HalfGripMiniMap
 
 		/// <summary>
 		/// Metres to a pixel of a map showing the Open World: <c>OpenWorld.ViewTiles</c> tiles across the inside of its rim, so the screen
-		/// minimap and the GPS show the same stretch of country at their own resolutions; <paramref name="zoom"/> times less at the GPS's
-		/// closer views.
+		/// minimap and the GPS show the same stretch of country at their own resolutions; <paramref name="zoom"/> times closer at the GPS's
+		/// other views (0.5 is twice as far out).
 		/// </summary>
-		internal static float MetresPerPixel(PixelMap map, int zoom = 1) => Mod.ViewTiles.Value * OpenWorldLink.Tiles.TileSize / Mathf.Max(8, map.Size - 2 * map.Room) / Mathf.Max(1, zoom);
+		internal static float MetresPerPixel(PixelMap map, float zoom = 1f) => Mod.ViewTiles.Value * OpenWorldLink.Tiles.TileSize / Mathf.Max(8, map.Size - 2 * map.Room) / Mathf.Max(0.1f, zoom);
 
 		internal static void OnSceneLoaded(Scene loaded)
 		{
@@ -70,8 +70,9 @@ namespace HalfGripMiniMap
 				Gather();
 				if (OpenWorld)
 				{
-					// Corners of the square GPS reach half as far again as its sides, and a pixel's looks a little past them.
-					OpenWorldLink.Update(Player, Mod.ViewTiles.Value * OpenWorldLink.Tiles.TileSize * 0.75f + 10f);
+					// Corners of the square GPS reach half as far again as its sides, and a pixel's looks a little past them. The GPS
+					// zoomed out shows more.
+					OpenWorldLink.Update(Player, Mod.ViewTiles.Value * Mathf.Max(1f, GpsScreen.WorldWiden) * OpenWorldLink.Tiles.TileSize * 0.75f + 10f);
 				}
 			}
 		}

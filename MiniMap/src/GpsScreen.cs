@@ -11,7 +11,12 @@ namespace HalfGripMiniMap
 	/// and place on the dash can be tuned without restarting.
 	///
 	/// The cockpit hand can poke the screen as it can the main menu's: a left click only taps it (the menu's tap, see
-	/// <see cref="PixelMap.Tap"/>, and its sound), a right click taps it and steps to the next of <see cref="Zooms"/> views.
+	/// <see cref="PixelMap.Tap"/>, and its sound), a right click taps it and steps to the next of <see cref="Zooms"/> views: from the
+	/// middle one out, then in, then back.
+	///
+	/// The dash's sprites are lit and write depth, so parts in the same plane fight once the camera turns (looking over a shoulder): the
+	/// game keeps its stacked parts apart in depth, and so the screen stands a little in front of its casing. For the same reason the
+	/// touch target stands in front of the screen: the hand pointing at a clickable rests on its plane.
 	/// </summary>
 	internal sealed class GpsScreen : MonoBehaviour
 	{
@@ -32,11 +37,24 @@ namespace HalfGripMiniMap
 		private bool failed;
 		private float tappedAt = float.NegativeInfinity;
 
-		/// <summary>The views a right click steps through: the whole lap (in the Open World, <c>OpenWorld.ViewTiles</c> across), then two and four times closer, round the car.</summary>
+		/// <summary>
+		/// The views a right click steps through, the first shown first: in races the lap twice the size of the whole lap round the car,
+		/// then the whole lap, then four times; in the Open World <c>OpenWorld.ViewTiles</c> across, then twice and half that.
+		/// </summary>
 		private const int Zooms = 3;
+		private static readonly int[] LapZooms = { 2, 1, 4 };
+		private static readonly float[] WorldZooms = { 1f, 0.5f, 2f };
+		private static readonly string[] ZoomNames = { "middle", "out", "in" };
 		/// <summary>The view the GPS shows, kept from race to race for the session (not saved), like the screen minimap's K.</summary>
 		private static int zoomLevel;
-		private static int Zoom => 1 << zoomLevel;
+
+		/// <summary>How many times wider than <c>OpenWorld.ViewTiles</c> the GPS shows the Open World now: the tiles <see cref="Race"/> keeps must reach that far.</summary>
+		internal static float WorldWiden => 1f / WorldZooms[zoomLevel];
+
+		/// <summary>World distance the screen stands in front of its casing: well under a cockpit pixel, but clear of the depth buffer's precision.</summary>
+		private const float ScreenLift = 0.02f;
+		/// <summary>World distance the touch target stands in front of the screen, where the pointing hand rests: what most of the game's levers give the hand (Grabbable.handIndicatorCameraOffset).</summary>
+		private const float TouchLift = 0.1f;
 
 		private void Start()
 		{
@@ -155,15 +173,21 @@ namespace HalfGripMiniMap
 			map.Blank(NoSignal);
 			map.Upload();
 			screenSprite = Sprite.Create(map.Texture, new Rect(0, 0, screen, screen), new Vector2(0.5f, 0.5f), ScreenDetail / texel, 0, SpriteMeshType.FullRect);
-			Vector3 middle = foot + new Vector3((casing.ScreenX + hole * 0.5f - casing.Width * 0.5f) * texel, (casing.ScreenY + hole * 0.5f) * texel, 0f);
+			float toward = Toward();
+			float perUnit = Mathf.Max(1e-5f, Mathf.Abs(transform.lossyScale.z));
+			Vector3 middle = foot + new Vector3((casing.ScreenX + hole * 0.5f - casing.Width * 0.5f) * texel, (casing.ScreenY + hole * 0.5f) * texel, toward * ScreenLift / perUnit);
 			screenPart = Part("Screen", screenSprite, material, middle, 1, layer).gameObject;
-			// Exactly the screen, no wider (the hand's grab tolerance scales hitBoxExpand), in the dash's plane like its levers' colliders.
-			InteriorSquareCollider target = screenPart.AddComponent<InteriorSquareCollider>();
+			// Exactly the screen, no wider (the hand's grab tolerance scales hitBoxExpand), facing the way the dash's levers' colliders do.
+			GameObject touch = new GameObject("Touch");
+			touch.layer = layer;
+			touch.transform.SetParent(screenPart.transform, false);
+			touch.transform.localPosition = new Vector3(0f, 0f, toward * TouchLift / perUnit);
+			InteriorSquareCollider target = touch.AddComponent<InteriorSquareCollider>();
 			target.width = target.height = hole * texel;
 			target.hitBoxExpand = 0f;
 			target.localNormalPlane = Vector3.forward;
 			target.sortingLayer = 0;
-			GpsButton button = screenPart.AddComponent<GpsButton>();
+			GpsButton button = touch.AddComponent<GpsButton>();
 			button.attachedCollider = target;
 			button.Left = Tap;
 			button.Right = NextZoom;
@@ -207,6 +231,24 @@ namespace HalfGripMiniMap
 				}
 			}
 			Mod.Info(text.ToString());
+		}
+
+		/// <summary>
+		/// Which way along the GPS's own z the cockpit camera is, +1 or -1: in front of the dash is toward it. The game's dash has it at -z
+		/// (parts drawn over others sit at lower z), which is the answer when there is no camera to ask.
+		/// </summary>
+		private float Toward()
+		{
+			Grabber hand = FindFirstObjectByType<Grabber>();
+			Camera cam = hand != null && hand.viewCamera != null ? hand.viewCamera : Camera.main;
+			if (cam == null)
+			{
+				Mod.Info("GPS: no cockpit camera found; the dash's front is taken to be -z");
+				return -1f;
+			}
+			float z = transform.InverseTransformPoint(cam.transform.position).z;
+			Mod.Info("GPS: the cockpit camera '" + cam.name + "' is at " + z.ToString("0.00") + " along the GPS's z");
+			return z > 0f ? 1f : -1f;
 		}
 
 		private SpriteRenderer Part(string name, Sprite sprite, Material material, Vector3 position, int above, int layer)
@@ -255,11 +297,11 @@ namespace HalfGripMiniMap
 				Race.Tick();
 				if (Race.Ready && Race.OpenWorld)
 				{
-					map.DrawLocal(OpenWorldLink.Tiles, Race.Palette, Race.Heading, Race.MetresPerPixel(map, Zoom), Race.Player, Race.Cars);
+					map.DrawLocal(OpenWorldLink.Tiles, Race.Palette, Race.Heading, Race.MetresPerPixel(map, WorldZooms[zoomLevel]), Race.Player, Race.Cars);
 				}
 				else if (Race.Ready)
 				{
-					map.Draw(lap.Get(map.Size, map.Room, Zoom), Race.Palette, Race.Heading, Race.Player, Race.Cars);
+					map.Draw(lap.Get(map.Size, map.Room, LapZooms[zoomLevel]), Race.Palette, Race.Heading, Race.Player, Race.Cars);
 				}
 				else
 				{
@@ -287,7 +329,7 @@ namespace HalfGripMiniMap
 		{
 			Tap();
 			zoomLevel = (zoomLevel + 1) % Zooms;
-			Mod.Info("GPS: zoom " + Zoom + (zoomLevel == 0 ? " (the whole view)" : " (round the car)"));
+			Mod.Info("GPS: zoomed " + ZoomNames[zoomLevel] + " (lap " + LapZooms[zoomLevel] + "x, Open World " + (Mod.ViewTiles.Value / WorldZooms[zoomLevel]).ToString("0.0") + " tiles across)");
 		}
 
 		/// <summary>Takes down the parts, textures and sprites of the last build.</summary>
