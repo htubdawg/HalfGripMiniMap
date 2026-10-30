@@ -1,6 +1,6 @@
 # MiniMap for Half Grip
 
-**Version 1.2.1** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
+**Version 1.2.2** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
 
 A pixel-art map of the whole lap that turns with your car and shows every racer. Buy a **GPS** for your dash, or switch on the
 **screen minimap**. It works on every map: the game's own, [ProcTrack](https://github.com/htubdawg/ProcTrack)'s procedural maps, and
@@ -17,7 +17,7 @@ A **$25** item in the shop. It stands on the dash in one of the two module slots
 the slow-mo buttons. Its screen shows the map: the whole lap turned so the way your car points is up, your car as a white arrow, bots
 as red dots and other players as blue dots. It has no other effect, so it costs you a module slot and a little money.
 
-You can poke its screen with the cockpit hand, like the screen in the main menu: the picture bulges, tears and lights up where you
+You can poke its screen with the cockpit hand, like the screen in the main menu (point at it until the hand locks on, then click): the picture bulges, tears and lights up where you
 tap, with the menu's tap sound. A **left click** only taps it. A **right click** taps it and zooms. The GPS starts in the middle
 view: twice the size of the whole lap, your car in the middle (other cars out of sight wait at the rim). Right click zooms out to
 the whole lap, again zooms in to four times, and again goes back to the middle. In the Open World the three views are
