@@ -135,7 +135,7 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 ## Status (keep current)
 
 - **Released:** 1.2.3 on `main` (PR #16, merged): the tap clip split into its sounds, one played at random; no lock-on timer.
-- **Open:** 1.2.4 on `claude/vibrant-turing-3uafvm` (PR below): only the clip's first sound plays (the rest sound like menu clicks,
+- **Open:** 1.2.4 on `claude/vibrant-turing-3uafvm`, PR #17: only the clip's first sound plays (the rest sound like menu clicks,
   owner); races start zoomed out on the whole lap, the Open World in the middle, each with its own zoom. Compiles; not tested in game.
 - **Waiting on the owner:** an in-game test of 1.2.4: one clean tap per poke, the starting zooms. Still to confirm: no fighting
   when looking over a shoulder, a gamepad if there is one; and the first Open World test (screenshots of both maps; the log should
