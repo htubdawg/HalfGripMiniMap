@@ -1,6 +1,6 @@
 # MiniMap for Half Grip
 
-**Version 1.2.3** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
+**Version 1.2.4** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
 
 A pixel-art map of the whole lap that turns with your car and shows every racer. Buy a **GPS** for your dash, or switch on the
 **screen minimap**. It works on every map: the game's own, [ProcTrack](https://github.com/htubdawg/ProcTrack)'s procedural maps, and
@@ -18,11 +18,11 @@ the slow-mo buttons. Its screen shows the map: the whole lap turned so the way y
 as red dots and other players as blue dots. It has no other effect, so it costs you a module slot and a little money.
 
 You can poke its screen with the cockpit hand, like the screen in the main menu: the picture bulges, tears and lights up where you
-tap, with the menu's tap sound. A **left click** only taps it. A **right click** taps it and zooms. The GPS starts in the middle
-view: twice the size of the whole lap, your car in the middle (other cars out of sight wait at the rim). Right click zooms out to
-the whole lap, again zooms in to four times, and again goes back to the middle. In the Open World the three views are
-`OpenWorld.ViewTiles` across, then twice and half that. The zoom stays as you left it until you quit the game. The screen minimap
-does not zoom.
+tap, with the menu's tap sound. A **left click** only taps it. A **right click** taps it and zooms through three views in turn:
+middle, out, in, then middle again. In a race the GPS starts zoomed out, on the whole lap; the middle view is twice that size and
+in is four times, both with your car in the middle (other cars out of sight wait at the rim). In the Open World it starts in the
+middle, `OpenWorld.ViewTiles` across; out is twice that and in is half. Races and the Open World each keep their own zoom until you
+quit the game. The screen minimap does not zoom.
 
 ![The GPS screen at its three zooms, then a tap on it fading away](docs/gps-zoom.png)
 
@@ -102,7 +102,7 @@ look for `Loaded MiniMap` in `BepInEx\LogOutput.log`.
 |---|---|
 | **K** | Show / hide the screen minimap. The key is only there (in Settings > Controls, where you can rebind it) when `Display.Enabled` is on. |
 | **Left click** on the GPS | Tap its screen |
-| **Right click** on the GPS | Tap its screen and zoom: middle, out, in, back to middle |
+| **Right click** on the GPS | Tap its screen and zoom: middle, out, in, back to middle (races start out, the Open World in the middle) |
 
 ## Settings
 

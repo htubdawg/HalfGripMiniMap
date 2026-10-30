@@ -11,8 +11,8 @@ namespace HalfGripMiniMap
 	/// and place on the dash can be tuned without restarting.
 	///
 	/// The cockpit hand can poke the screen as it can the main menu's: a left click only taps it (the menu's tap, see
-	/// <see cref="PixelMap.Tap"/>, and its sound), a right click taps it and steps to the next of <see cref="Zooms"/> views: from the
-	/// middle one out, then in, then back.
+	/// <see cref="PixelMap.Tap"/>, and its sound), a right click taps it and steps to the next of <see cref="Zooms"/> views: middle,
+	/// out, in, middle again. Races start out (the whole lap), the Open World in the middle.
 	///
 	/// The dash's sprites are lit and write depth, so parts in the same plane fight once the camera turns (looking over a shoulder): the
 	/// game keeps its stacked parts apart in depth, and so the screen stands a little in front of its casing. For the same reason the
@@ -38,18 +38,24 @@ namespace HalfGripMiniMap
 		private float tappedAt = float.NegativeInfinity;
 
 		/// <summary>
-		/// The views a right click steps through, the first shown first: in races the lap twice the size of the whole lap round the car,
-		/// then the whole lap, then four times; in the Open World <c>OpenWorld.ViewTiles</c> across, then twice and half that.
+		/// The views a right click steps through, in order: middle, out, in. In races the lap twice the size of the whole lap round the
+		/// car, the whole lap, four times; in the Open World <c>OpenWorld.ViewTiles</c> across, twice that, half that.
 		/// </summary>
 		private const int Zooms = 3;
+		private const int Middle = 0;
+		private const int Out = 1;
 		private static readonly int[] LapZooms = { 2, 1, 4 };
 		private static readonly float[] WorldZooms = { 1f, 0.5f, 2f };
 		private static readonly string[] ZoomNames = { "middle", "out", "in" };
-		/// <summary>The view the GPS shows, kept from race to race for the session (not saved), like the screen minimap's K.</summary>
-		private static int zoomLevel;
+		/// <summary>
+		/// The view the GPS shows in races and in the Open World, each its own, kept from race to race for the session (not saved), like
+		/// the screen minimap's K. A race starts with the whole lap, the Open World in the middle (the owner's choice).
+		/// </summary>
+		private static int lapLevel = Out;
+		private static int worldLevel = Middle;
 
 		/// <summary>How many times wider than <c>OpenWorld.ViewTiles</c> the GPS shows the Open World now: the tiles <see cref="Race"/> keeps must reach that far.</summary>
-		internal static float WorldWiden => 1f / WorldZooms[zoomLevel];
+		internal static float WorldWiden => 1f / WorldZooms[worldLevel];
 
 		/// <summary>World distance the screen stands in front of its casing: well under a cockpit pixel, but clear of the depth buffer's precision.</summary>
 		private const float ScreenLift = 0.02f;
@@ -297,11 +303,11 @@ namespace HalfGripMiniMap
 				Race.Tick();
 				if (Race.Ready && Race.OpenWorld)
 				{
-					map.DrawLocal(OpenWorldLink.Tiles, Race.Palette, Race.Heading, Race.MetresPerPixel(map, WorldZooms[zoomLevel]), Race.Player, Race.Cars);
+					map.DrawLocal(OpenWorldLink.Tiles, Race.Palette, Race.Heading, Race.MetresPerPixel(map, WorldZooms[worldLevel]), Race.Player, Race.Cars);
 				}
 				else if (Race.Ready)
 				{
-					map.Draw(lap.Get(map.Size, map.Room, LapZooms[zoomLevel]), Race.Palette, Race.Heading, Race.Player, Race.Cars);
+					map.Draw(lap.Get(map.Size, map.Room, LapZooms[lapLevel]), Race.Palette, Race.Heading, Race.Player, Race.Cars);
 				}
 				else
 				{
@@ -328,8 +334,16 @@ namespace HalfGripMiniMap
 		private void NextZoom()
 		{
 			Tap();
-			zoomLevel = (zoomLevel + 1) % Zooms;
-			Mod.Info("GPS: zoomed " + ZoomNames[zoomLevel] + " (lap " + LapZooms[zoomLevel] + "x, Open World " + (Mod.ViewTiles.Value / WorldZooms[zoomLevel]).ToString("0.0") + " tiles across)");
+			if (Race.OpenWorld)
+			{
+				worldLevel = (worldLevel + 1) % Zooms;
+				Mod.Info("GPS: zoomed " + ZoomNames[worldLevel] + " (" + (Mod.ViewTiles.Value / WorldZooms[worldLevel]).ToString("0.0") + " tiles across)");
+			}
+			else
+			{
+				lapLevel = (lapLevel + 1) % Zooms;
+				Mod.Info("GPS: zoomed " + ZoomNames[lapLevel] + " (the lap " + LapZooms[lapLevel] + "x)");
+			}
 		}
 
 		/// <summary>Takes down the parts, textures and sprites of the last build.</summary>
