@@ -19,7 +19,7 @@ player's car, with a marker per car (in the Open World mod, the country round th
 | `Race.cs` | Shared by both maps: finds the race's `TrackManager`, bumps `Version` when `lapManager.trackLine` or the colours change, gathers the cars each frame; `LapCache` keeps each map's `TrackImage` |
 | `MiniMapHud.cs` | The screen minimap: a round `PixelMap` on an overlay canvas in a corner |
 | `Gps.cs` | The GPS item: a clone of the magnet item (no code of its own, MEDIUM, module mount) with its exterior and stats stripped, a new interior prefab and a drawn icon |
-| `GpsScreen.cs` | The GPS on the dash (made by the game's `LoadoutSpawner` from the prefab): measures the cockpit's pixel size (median over the dash's sprites, about 0.05 units), then a casing sprite at that size and a square `PixelMap` screen at twice its resolution, the screen in the unlit sprite material, the casing in its own copy of the lit `SpriteLit` with its texture set (the Lit shader reads the material's `_BaseMap`, so each dash sprite has its own copy); the zoom (1, 2, 4, session only) and the tap's time |
+| `GpsScreen.cs` | The GPS on the dash (made by the game's `LoadoutSpawner` from the prefab): measures the cockpit's pixel size (median over the dash's sprites, about 0.05 units), then a casing sprite at that size and a square `PixelMap` screen at twice its resolution, the screen in the unlit sprite material, the casing in its own copy of the lit `SpriteLit` with its texture set (the Lit shader reads the material's `_BaseMap`, so each dash sprite has its own copy); the zoom (middle, out, in; session only), the tap's time; the screen stands 0.02 in front of the casing and the touch collider 0.1 in front of the screen |
 | `GpsTap.cs` | Poking the GPS: `GpsButton`, the game's own `Clickable` (with an `InteriorSquareCollider` the size of the screen, put on by `GpsScreen`), which the cockpit hand clicks left (tap) and right (tap and next zoom); and the main menu's `ScreenTap` clip, found among the loaded assets at scene loads and kept in a static field |
 | `GpsArt.cs` | The GPS casing (grey speckled plastic box with top and side faces on a base plate, after the jumper's key cap) and shop icon, drawn as pixel arrays |
 | `TrackImage.cs` | The lap from above in flat palette colours (ground, road, edge lines, start line) at 4x the minimap's resolution, fitted inside the round window |
@@ -102,25 +102,32 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
   `Streamer.MapPicture`). Look at it after any change to the local map.
 - Not done, still open with the owner: zooming out with speed, and a north-up choice (the player's arrow would then have to turn).
 
-## The GPS tap and zoom (1.2.0)
+## The GPS tap and zoom (1.2.0, 1.2.1)
 
 - The main menu's tap is `VhsScreenTap` (sets `_VhsTap` for the full-screen VHS shader, `VhsRendererFeature`) and a VariedSound with
   the clip `ScreenTap` (pitch +-0.5). The shader works on the whole camera image and no race scene has a `VhsEffect` volume, so
   `PixelMap.Tap` redoes it on the map's pixels: bulge, row tear and red/blue split by whole pixels, light in 3 hard steps, eased over
   the menu's 0.45 s, from the screen's middle (the hand points at the screen, not at a place on it).
-- Zoom: `TrackImage.Build(..., zoom)` draws the lap 2 or 4 times bigger with fewer image pixels per map pixel (8/zoom, at most 4), so
+- Zoom: the GPS starts at the middle view; right click goes out, in, back to the middle (lap image zoom 2, 1, 4; Open World
+  `ViewTiles` times 1, 2, 0.5, and `Race` keeps tiles out to the widest shown). `TrackImage.Build(..., zoom)` draws the lap 2 or 4 times bigger with fewer image pixels per map pixel (8/zoom, at most 4), so
   the image is 4 times the whole lap's at either closer view; `PixelMap.Draw` then centres on the player and pins far cars to the
   rim. Zoom 1 is byte-identical to 1.1.0 (checked with `tools/preview`). Open World: `MetresPerPixel(map, zoom)`.
+- Depth: the dash's lit sprites write depth, so the GPS's screen and casing in one plane fought when the camera turned (owner's
+  first test). The game keeps its stacked parts apart in depth (toward the camera is -z on the dash); the screen now stands 0.02
+  world units in front of the casing, the way found from the cockpit camera (`Grabber.viewCamera`). The hand pointing at a
+  `Clickable` with no `Grabbable` rests exactly on the collider's plane (`Grabber.TowardCamera(..., 0)`), so it sank behind the
+  screen: the collider is on a child `Touch` 0.1 in front of the screen (the levers' `handIndicatorCameraOffset`).
 
 ## Status (keep current)
 
-- **Released:** 1.1.0 on `main` (PR #11, merged): Open World mode for both maps.
-- **Open:** 1.2.0 on `claude/vibrant-turing-3uafvm`: poke the GPS (left click taps it, right click taps and zooms 1x/2x/4x, in races
-  and the Open World), PR #13. Compiles; preview pictures checked. Not yet tested in game.
-- **Waiting on the owner:** an in-game test of 1.2.0: does the hand turn to its pointing pose over the GPS screen and do both clicks
-  work (also with a gamepad), is the tap sound heard (log: `kept the main menu's tap sound`) and at the cockpit's volume, does the
-  zoom read well in a race and in the Open World. Also still the first Open World test of 1.1.0 (screenshots of both maps, the log
-  should have `linked to the Open World's map` and `an Open World race`).
+- **Released:** 1.2.0 on `main` (PR #13, merged): poke the GPS (left click taps, right click taps and zooms).
+- **Open:** 1.2.1 on `claude/vibrant-turing-3uafvm` (PR below): after the owner's first test of 1.2.0, the GPS starts at the middle
+  view and right click goes out, in, back (done); the hand sank behind the screen after a moment (collider moved in front, done);
+  the screen fought its casing when leaning (screen lifted in front of it, done). Compiles; preview checked; not tested in game.
+- **Waiting on the owner:** an in-game test of 1.2.1: the hand stays in front of the screen, no fighting when looking over a
+  shoulder, the zoom order, the tap sound (log: `kept the main menu's tap sound`), a gamepad if there is one. The log also says
+  where the cockpit camera was found (`the cockpit camera ... along the GPS's z`; it should be negative). Also still the first Open
+  World test (screenshots of both maps; the log should have `linked to the Open World's map` and `an Open World race`).
 - **Open questions for the owner:** zoom out with speed? A north-up option? (Both left out: heading-up, fixed window.)
 - **Known, not yet fixed:** `tools/preview` no longer reproduces the committed `MiniMap/icon.png` exactly (160 pixels differ, round
   the car markers). It was so on `main` before 1.1.0, and 1.1.0's output is byte-identical to the old code's, so the cause is in the

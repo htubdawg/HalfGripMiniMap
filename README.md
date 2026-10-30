@@ -1,6 +1,6 @@
 # MiniMap for Half Grip
 
-**Version 1.2.0** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
+**Version 1.2.1** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
 
 A pixel-art map of the whole lap that turns with your car and shows every racer. Buy a **GPS** for your dash, or switch on the
 **screen minimap**. It works on every map: the game's own, [ProcTrack](https://github.com/htubdawg/ProcTrack)'s procedural maps, and
@@ -18,10 +18,11 @@ the slow-mo buttons. Its screen shows the map: the whole lap turned so the way y
 as red dots and other players as blue dots. It has no other effect, so it costs you a module slot and a little money.
 
 You can poke its screen with the cockpit hand, like the screen in the main menu: the picture bulges, tears and lights up where you
-tap, with the menu's tap sound. A **left click** only taps it. A **right click** taps it and zooms: the whole lap, then two and four
-times closer with your car in the middle (other cars out of sight wait at the rim), then back to the whole lap. In the Open World
-the three zooms are `OpenWorld.ViewTiles` across, then half and a quarter of that. The zoom stays as you left it until you quit the
-game. The screen minimap does not zoom.
+tap, with the menu's tap sound. A **left click** only taps it. A **right click** taps it and zooms. The GPS starts in the middle
+view: twice the size of the whole lap, your car in the middle (other cars out of sight wait at the rim). Right click zooms out to
+the whole lap, again zooms in to four times, and again goes back to the middle. In the Open World the three views are
+`OpenWorld.ViewTiles` across, then twice and half that. The zoom stays as you left it until you quit the game. The screen minimap
+does not zoom.
 
 ![The GPS screen at its three zooms, then a tap on it fading away](docs/gps-zoom.png)
 
@@ -101,7 +102,7 @@ look for `Loaded MiniMap` in `BepInEx\LogOutput.log`.
 |---|---|
 | **K** | Show / hide the screen minimap. The key is only there (in Settings > Controls, where you can rebind it) when `Display.Enabled` is on. |
 | **Left click** on the GPS | Tap its screen |
-| **Right click** on the GPS | Tap its screen and zoom (whole lap, 2x, 4x) |
+| **Right click** on the GPS | Tap its screen and zoom: middle, out, in, back to middle |
 
 ## Settings
 
@@ -119,7 +120,7 @@ saved, so you can change these while the game runs (all but `Display.Enabled`, w
 | `GPS.Width` | `1.9` | Width of the GPS on the dash, in dash units |
 | `GPS.OffsetX`, `GPS.OffsetY` | `0`, `-0.6` | Move the GPS on the dash |
 | `GPS.LitCasing` | `true` | Light the GPS casing like the cockpit (turn it off if the casing does not show) |
-| `OpenWorld.ViewTiles` | `2.5` | In the Open World: how much country both maps show across, in its 250 m tiles (1 to 8) |
+| `OpenWorld.ViewTiles` | `2.5` | In the Open World: how much country both maps show across, in its 250 m tiles (1 to 8); the GPS's middle view |
 | `Debug.VerboseLog` | `false` | Write each map build to the log |
 
 ## Notes

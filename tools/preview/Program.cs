@@ -27,7 +27,7 @@ namespace HalfGripMiniMap
 	///   gps-dash.png  the GPS as on the dash (38 casing pixels wide, the screen at twice that resolution), 4x
 	///   gps-icon.png  the shop icon (26x24, as Gps.IconWidth/IconHeight), 6x
 	///   icon.png      the mod's picture for the mod manager, 128x128: copy it to MiniMap/icon.png
-	///   gps-zoom.png  the GPS screen at its three zooms, then a tap on it 0, 0.1, 0.2 and 0.35 s on, 4x
+	///   gps-zoom.png  the GPS screen at its three zooms in the order a right click steps (2x, whole lap, 4x), then a tap on it 0, 0.1, 0.2 and 0.35 s on, 4x
 	/// and checks that the shop icon is not blank. docs/gps.png was put together from the first two.
 	/// </summary>
 	internal static class Program
@@ -100,12 +100,12 @@ namespace HalfGripMiniMap
 			Png.Save(path, px, w, h, 4);
 		}
 
-		/// <summary>The dash GPS's screen at zooms 1, 2 and 4, then at zoom 1 at four moments of a tap, side by side with a gap of 2.</summary>
+		/// <summary>The dash GPS's screen at zooms 2 (the first view), 1 and 4, then at zoom 1 at four moments of a tap, side by side with a gap of 2.</summary>
 		private static void Zooms(List<Vector3> pts, string path)
 		{
 			int screen = (38 - GpsArt.Dash.ExtraWidth) * 2;
 			List<PixelMap> maps = new List<PixelMap>();
-			foreach (int zoom in new[] { 1, 2, 4 })
+			foreach (int zoom in new[] { 2, 1, 4 })
 			{
 				maps.Add(Screen(pts, screen, 260, zoom));
 			}
