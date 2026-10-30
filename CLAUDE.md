@@ -128,7 +128,7 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 ## Status (keep current)
 
 - **Released:** 1.2.1 on `main` (PR #14, merged): middle zoom first, hand and screen in front of the dash.
-- **Open:** 1.2.2 on `claude/vibrant-turing-3uafvm` (PR below): the owner heard stray taps while using other controls. The GPS's
+- **Open:** 1.2.2 on `claude/vibrant-turing-3uafvm`, PR #15: the owner heard stray taps while using other controls. The GPS's
   collider is now below every control in Grabber's pick, and a click counts only while the hand is locked onto the GPS (the
   owner's idea). Compiles; not tested in game.
 - **Waiting on the owner:** an in-game test of 1.2.2: no more stray taps when using levers, guns and magazines near the GPS; poking
