@@ -132,7 +132,7 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 ## Status (keep current)
 
 - **Released:** 1.2.2 on `main` (PR #15, merged): the GPS's collider below every control in Grabber's pick, and a 0.1 s lock-on.
-- **Open:** 1.2.3 on `claude/vibrant-turing-3uafvm` (PR below): the stray taps were the 22.77 s `ScreenTap` clip played to its end;
+- **Open:** 1.2.3 on `claude/vibrant-turing-3uafvm`, PR #16: the stray taps were the 22.77 s `ScreenTap` clip played to its end;
   now only its first sound plays. The lock-on timer is gone (it ate real clicks). Compiles; not tested in game.
 - **Waiting on the owner:** an in-game test of 1.2.3: no more stray tap sounds, clicks on the GPS answer at once. The log line
   `the tap sound has N loud burst(s), starting at ...; playing its first X s` tells what the clip holds; if it says the samples
