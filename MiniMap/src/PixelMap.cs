@@ -117,14 +117,22 @@ namespace HalfGripMiniMap
 			texture = null;
 		}
 
-		/// <summary>Draws the map turned so <paramref name="heading"/> (degrees clockwise from north) points up, with the player at <paramref name="player"/>.</summary>
+		/// <summary>
+		/// Draws the map turned so <paramref name="heading"/> (degrees clockwise from north) points up, with the player at
+		/// <paramref name="player"/>. The whole lap turns about its own middle; a zoomed-in image (<see cref="TrackImage.Zoom"/>) cannot
+		/// show the whole lap, so it is drawn round the player in the middle, like the Open World's map, and cars out of sight wait at the
+		/// rim.
+		/// </summary>
 		internal void Draw(TrackImage image, Palette palette, float heading, Vector3 player, List<KeyValuePair<Vector3, Marker>> cars)
 		{
 			float rad = heading * Mathf.Deg2Rad;
 			float cos = Mathf.Cos(rad);
 			float sin = Mathf.Sin(rad);
 			float half = Size * 0.5f;
-			int detail = TrackImage.Detail;
+			int detail = image.Detail;
+			bool follow = image.Zoom > 1;
+			// The image point in the middle of the map, in image pixels from the image's own middle.
+			Vector2 middle = follow ? image.ToPixels(player) : Vector2.zero;
 			int side = image.Side;
 			Color32[] source = image.Pixels;
 			Color32 ground = palette.Ground;
@@ -145,18 +153,20 @@ namespace HalfGripMiniMap
 					// The map turns the other way to the car: un-turn the screen point to find the map point under it.
 					float mx = ox * cos + oy * sin;
 					float my = -ox * sin + oy * cos;
-					int sx = Mathf.FloorToInt(side * 0.5f + mx * detail);
-					int sy = Mathf.FloorToInt(side * 0.5f + my * detail);
+					int sx = Mathf.FloorToInt(side * 0.5f + middle.x + mx * detail);
+					int sy = Mathf.FloorToInt(side * 0.5f + middle.y + my * detail);
 					Pixels[at] = sx < 0 || sy < 0 || sx >= side || sy >= side ? ground : source[sy * side + sx];
 				}
 			}
 
 			bool small = Size < SmallBelow;
+			float edge = Round ? half - Ring - 3f : half - 3f;
 			foreach (KeyValuePair<Vector3, Marker> car in cars)
 			{
-				Stamp(small ? SmallDot : Dot, car.Value == Marker.Remote ? RemoteFill : BotFill, Screen(image, car.Key, cos, sin));
+				Vector2 at = Turn((image.ToPixels(car.Key) - middle) / detail, cos, sin);
+				Stamp(small ? SmallDot : Dot, car.Value == Marker.Remote ? RemoteFill : BotFill, Pixel(follow ? Pin(at, edge) : at));
 			}
-			Stamp(small ? SmallArrow : Arrow, PlayerFill, Screen(image, player, cos, sin));
+			Stamp(small ? SmallArrow : Arrow, PlayerFill, Pixel(Turn((image.ToPixels(player) - middle) / detail, cos, sin)));
 		}
 
 		/// <summary>
@@ -283,10 +293,83 @@ namespace HalfGripMiniMap
 			}
 		}
 
-		/// <summary>Where a world position is on the turned map, in its pixels from the bottom left corner.</summary>
-		private Vector2Int Screen(TrackImage image, Vector3 world, float cos, float sin)
+		/// <summary>Seconds a tap's mark takes to ease away: the main menu's (VhsEffect.tapSeconds).</summary>
+		internal const float TapSeconds = 0.45f;
+		/// <summary>How far the mark reaches from the middle, as a share of the map's width. The menu's is 0.12 of the screen; on a screen this small that would be a speck.</summary>
+		private const float TapReach = 0.5f;
+		/// <summary>How far the picture bulges out from the middle: the menu's tapWarp.</summary>
+		private const float TapWarp = 0.35f;
+		/// <summary>How far the tape tears and the colour comes apart: the menu's tapGlitch, as a share of the map's width at most.</summary>
+		private const float TapGlitch = 0.35f;
+		/// <summary>Steps of light the glow comes in, and how much each adds to a channel: hard rings, not a smooth glow.</summary>
+		private const int GlowSteps = 3;
+		private const int GlowStep = 18;
+
+		private Color32[] before;
+
+		/// <summary>
+		/// The main menu's screen tap on this map, <paramref name="age"/> seconds after it: the picture bulges out from the middle, rows
+		/// tear sideways and red and blue come apart, and light gathers in stepped rings, all easing away over <see cref="TapSeconds"/>.
+		/// The menu does it in a full-screen shader (VhsScreenTap and the VHS renderer feature); here it is done to the map's own pixels
+		/// after they are drawn, by whole pixels, so the map keeps its hard pixel look. Made for the square GPS screen.
+		/// </summary>
+		internal void Tap(float age)
 		{
-			return Pixel(Turn(image.ToPixels(world) / TrackImage.Detail, cos, sin));
+			if (age < 0f || age >= TapSeconds)
+			{
+				return;
+			}
+			if (before == null)
+			{
+				before = new Color32[Pixels.Length];
+			}
+			System.Array.Copy(Pixels, before, Pixels.Length);
+			float t = age / TapSeconds;
+			float strength = (1f - t) * (1f - t);
+			float half = Size * 0.5f;
+			float reach = Size * TapReach;
+			// The tear changes thirty times a second, the same on every row of a band two pixels high.
+			int frame = Mathf.FloorToInt(age * 30f);
+			float tear = TapGlitch * Size * 0.15f * strength;
+
+			for (int y = 0; y < Size; y++)
+			{
+				float oy = y + 0.5f - half;
+				int shift = Mathf.RoundToInt(tear * (Noise(y / 2, frame) * 2f - 1f));
+				for (int x = 0; x < Size; x++)
+				{
+					float ox = x + 0.5f - half;
+					float d = Mathf.Sqrt(ox * ox + oy * oy) / reach;
+					if (d >= 1f)
+					{
+						continue;
+					}
+					float f = (1f - d) * (1f - d) * strength;
+					float pull = 1f - TapWarp * f;
+					int sx = Mathf.FloorToInt(half + ox * pull) + Mathf.RoundToInt(shift * (1f - d));
+					int sy = Mathf.FloorToInt(half + oy * pull);
+					int split = Mathf.RoundToInt(TapGlitch * 6f * f);
+					int light = Mathf.Min(GlowSteps, Mathf.FloorToInt(f * (GlowSteps + 1))) * GlowStep;
+					Color32 c = Before(sx, sy);
+					c.r = (byte)Mathf.Min(255, Before(sx + split, sy).r + light);
+					c.g = (byte)Mathf.Min(255, c.g + light);
+					c.b = (byte)Mathf.Min(255, Before(sx - split, sy).b + light);
+					Pixels[y * Size + x] = c;
+				}
+			}
+		}
+
+		/// <summary>A pixel of the picture as it was before the tap, the nearest one inside it for a point outside.</summary>
+		private Color32 Before(int x, int y) => before[Mathf.Clamp(y, 0, Size - 1) * Size + Mathf.Clamp(x, 0, Size - 1)];
+
+		/// <summary>A number from 0 to 1 that looks random, the same for the same row band and frame.</summary>
+		private static float Noise(int band, int frame)
+		{
+			uint h = (uint)band * 0x9E3779B1u ^ (uint)frame * 0x85EBCA77u;
+			h ^= h >> 15;
+			h *= 0x2C1B3C6Du;
+			h ^= h >> 12;
+			return (h & 0xFFFF) / 65535f;
 		}
 
 		/// <summary>Draws a pixel shape centred on a point, inside the ring of a round map.</summary>

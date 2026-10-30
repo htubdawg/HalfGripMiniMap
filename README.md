@@ -1,6 +1,6 @@
 # MiniMap for Half Grip
 
-**Version 1.1.0** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
+**Version 1.2.0** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
 
 A pixel-art map of the whole lap that turns with your car and shows every racer. Buy a **GPS** for your dash, or switch on the
 **screen minimap**. It works on every map: the game's own, [ProcTrack](https://github.com/htubdawg/ProcTrack)'s procedural maps, and
@@ -16,6 +16,14 @@ car instead.
 A **$25** item in the shop. It stands on the dash in one of the two module slots, the same slots as the nitro lever, the magnet and
 the slow-mo buttons. Its screen shows the map: the whole lap turned so the way your car points is up, your car as a white arrow, bots
 as red dots and other players as blue dots. It has no other effect, so it costs you a module slot and a little money.
+
+You can poke its screen with the cockpit hand, like the screen in the main menu: the picture bulges, tears and lights up where you
+tap, with the menu's tap sound. A **left click** only taps it. A **right click** taps it and zooms: the whole lap, then two and four
+times closer with your car in the middle (other cars out of sight wait at the rim), then back to the whole lap. In the Open World
+the three zooms are `OpenWorld.ViewTiles` across, then half and a quarter of that. The zoom stays as you left it until you quit the
+game. The screen minimap does not zoom.
+
+![The GPS screen at its three zooms, then a tap on it fading away](docs/gps-zoom.png)
 
 ## The screen minimap
 
@@ -92,6 +100,8 @@ look for `Loaded MiniMap` in `BepInEx\LogOutput.log`.
 | Key | Does |
 |---|---|
 | **K** | Show / hide the screen minimap. The key is only there (in Settings > Controls, where you can rebind it) when `Display.Enabled` is on. |
+| **Left click** on the GPS | Tap its screen |
+| **Right click** on the GPS | Tap its screen and zoom (whole lap, 2x, 4x) |
 
 ## Settings
 
