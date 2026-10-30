@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Draws the Open World map with the mod's own drawing code on real Open World tiles. How to run it: see Program.cs. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS0436;CS1701;CS1702</NoWarn>
+    <OpenWorld Condition="'$(OpenWorld)' == ''">$(MSBuildThisFileDirectory)../../../halfgripopenworld</OpenWorld>
+    <Refs Condition="'$(Refs)' == ''">$(MSBuildThisFileDirectory)../../../halfgriprefs</Refs>
+    <Src>$(MSBuildThisFileDirectory)../../MiniMap/src</Src>
+    <World>$(OpenWorld)/OpenWorld/src</World>
+    <Managed>$(Refs)/game/HalfGrip_Data/Managed</Managed>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(Src)/PixelMap.cs;$(Src)/WorldTiles.cs;$(Src)/TrackImage.cs;$(Src)/Palettes.cs;$(Src)/Sampler.cs;../preview/Png.cs;Program.cs" />
+    <!-- The Open World's generator: pure functions of world x, z, as its own tools/preview uses them. -->
+    <Compile Include="$(World)/Noise.cs;$(World)/Rng.cs;$(World)/Heap.cs;$(World)/WorldGen.cs;$(World)/Rivers.cs;$(World)/Places.cs;$(World)/Network.cs;$(World)/LandUse.cs" />
+    <Reference Include="$(Managed)/UnityEngine.CoreModule.dll;$(Managed)/UnityEngine.PhysicsModule.dll;$(Managed)/UnityEngine.TerrainModule.dll;$(Managed)/Assembly-CSharp.dll;$(Refs)/game/BepInEx/core/BepInEx.dll" />
+  </ItemGroup>
+</Project>

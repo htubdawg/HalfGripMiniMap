@@ -1,7 +1,7 @@
 # HalfGripMiniMap
 
 A Half Grip (Steam app 4163270, Unity, Windows) mod: a round minimap in a corner of the screen that shows the whole lap, turned with the
-player's car, with a marker per car; and a GPS shop item that shows the same map on a screen on the dash. Current release: see `MiniMap/mod.json` (`version`, `gameVersion`).
+player's car, with a marker per car (in the Open World mod, the country round the car instead); and a GPS shop item that shows the same map on a screen on the dash. Current release: see `MiniMap/mod.json` (`version`, `gameVersion`).
 
 ## How the mod runs
 
@@ -22,8 +22,10 @@ player's car, with a marker per car; and a GPS shop item that shows the same map
 | `GpsScreen.cs` | The GPS on the dash (made by the game's `LoadoutSpawner` from the prefab): measures the cockpit's pixel size (median over the dash's sprites, about 0.05 units), then a casing sprite at that size and a square `PixelMap` screen at twice its resolution, the screen in the unlit sprite material, the casing in its own copy of the lit `SpriteLit` with its texture set (the Lit shader reads the material's `_BaseMap`, so each dash sprite has its own copy) |
 | `GpsArt.cs` | The GPS casing (grey speckled plastic box with top and side faces on a base plate, after the jumper's key cap) and shop icon, drawn as pixel arrays |
 | `TrackImage.cs` | The lap from above in flat palette colours (ground, road, edge lines, start line) at 4x the minimap's resolution, fitted inside the round window |
-| `PixelMap.cs` | A shown map (point filtered, round or square): rebuilt each frame by sampling `TrackImage` turned to the player's heading, plus the ring and car markers |
+| `PixelMap.cs` | A shown map (point filtered, round or square): rebuilt each frame by sampling `TrackImage` turned to the player's heading (`DrawLocal`: the Open World's tiles round the car), plus the ring and car markers |
 | `Palettes.cs` | Colours per base scene (from the scene name), shaded by the weather (`WeatherGrip.Current`) |
+| `OpenWorldLink.cs` | The link to the Open World mod's `HalfGripOpenWorld.MapView`, found by name at each scene load until found, its members made into delegates; keeps the tiles round the car up to date each frame |
+| `WorldTiles.cs` | The Open World's tile pictures round the car in world coordinates (scene position + origin offset), with a rank per pixel (water, then roads by class) so a shrunk map keeps them |
 | `Sampler.cs` | Colours for unknown scenes, read off the ground under and beside the track line (terrain layers or mesh materials) |
 
 ## Rules that matter
@@ -52,7 +54,8 @@ player's car, with a marker per car; and a GPS shop item that shows the same map
 ## Checking changes
 
 The tools expect the other repos as siblings of this one (override with the arguments or `-p:` properties shown):
-`../halfgriprefs` (game DLLs, scene dumps), `../ProcTrack` (only for `tools/lapdump`), and HalfGripTools anywhere.
+`../halfgriprefs` (game DLLs, scene dumps), `../ProcTrack` (only for `tools/lapdump`), `../halfgripopenworld` (only for
+`tools/worldview`), and HalfGripTools anywhere.
 
 - **Compile check** (run before every push): build HalfGripTools once against the refs, then compile the mod:
   ```
@@ -73,24 +76,24 @@ The tools expect the other repos as siblings of this one (override with the argu
 - **In game** (the owner tests; ask for screenshots and the log): copy `MiniMap/` to `<game>\BepInEx\HalfGripMods\`, set
   `Debug.VerboseLog=true`, read `BepInEx\LogOutput.log`.
 
-## Next: Open World mode (not started)
+## Open World mode (1.1.0)
 
 The Open World mod (`htubdawg/HalfGripOpenWorld`, 0.4.6+) is a 32 km world with a floating origin; its track line is only a token
-loop, so the lap-fitted map is useless there. Agreed plan, only for Open World (race maps unchanged):
+loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps call `PixelMap.DrawLocal` instead of drawing the lap:
 
-- A **local map round the car**: the car in the middle, a fixed window a few 250-unit tiles across (a new `OpenWorld.ViewTiles`
-  setting), built from Open World's own per-tile map pictures, for both the screen minimap and the GPS. No start line.
-- **Kept in world coordinates** (scene position + origin offset), so origin shifts do not matter; car markers relative to the player.
-- **Open World's public API** (merged in 0.4.6, `OpenWorld/src/MapView.cs`), read by **reflection by name** (each mod is compiled on its
-  own, so MiniMap cannot reference it; find the type `HalfGripOpenWorld.MapView` in the loaded assemblies). All static properties
-  except the one method:
-  - `bool Active`: an Open World race is loaded. Open World mode only when the type exists and this is true.
-  - `double OriginX`, `double OriginZ`: world x, z of the scene's 0,0 (scene position + these = world position).
-  - `float TileSize` (250): tile (tx, tz) covers world x from tx * TileSize to (tx + 1) * TileSize, z the same.
-  - `int TilePixels` (64): a tile's map picture is TilePixels square, about 4 units a pixel.
-  - `int Version`: goes up when a tile's picture is added or removed.
-  - `bool TryGetTile(int tx, int tz, Color32[] into)`: copies the tile's picture (land use, water, roads by class in the colours of
-    its `docs/world.png`, roads at least 2 px wide), rows from the south, x east. False if the tile is not loaded (11x11 tiles are
-    loaded round the car by default). Main thread only.
-- **Still to ask the owner:** the default window size (suggested about 2.5 tiles across), whether it should zoom out with speed, and
-  heading-up (as the race maps) or north-up in Open World.
+- A **local map round the car**, heading-up like the race maps, `OpenWorld.ViewTiles` (default 2.5) 250 m tiles across the inside of
+  the rim (`Race.MetresPerPixel`), from the Open World's own tile pictures. No start line; a white N at the rim points north; other
+  cars out of sight are pinned to the rim. The `Palettes.OpenWorld` palette gives only the rim and the ground of unloaded tiles.
+- Each map pixel takes the highest ranked tile pixel among a few points across it (`WorldTiles.Ranked`: water, then roads by class,
+  the colours of Open World's `docs/world.png`), so 2-pixel roads survive the GPS's ~12 m pixels. Keep `Ranked` in step if Open World
+  changes its map colours; an unknown colour only ranks as land.
+- **World coordinates** (scene position + origin offset) for the tile window, so origin shifts do not matter; car markers relative
+  to the player.
+- **Open World's public API** (`OpenWorld/src/MapView.cs`), read by **reflection by name** (each mod is compiled on its own, so MiniMap
+  cannot reference it). All static properties except the one method: `bool Active`, `double OriginX`/`OriginZ`, `float TileSize`
+  (250), `int TilePixels` (64), `int Version` (tiles added or removed), `bool TryGetTile(int tx, int tz, Color32[] into)` (rows from
+  the south, x east; main thread only). A MapView missing a member logs one warning and the Open World gets no map.
+- **Picture:** `dotnet run -c Release --project tools/worldview -- docs/openworld.png` (needs `../halfgripopenworld`, override with
+  `-p:OpenWorld=`) draws the README's sheet with `DrawLocal` on tiles made by Open World's own generator round its spawn (a copy of its
+  `Streamer.MapPicture`). Look at it after any change to the local map.
+- Not done, still open with the owner: zooming out with speed, and a north-up choice (the player's arrow would then have to turn).

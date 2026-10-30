@@ -86,6 +86,19 @@ namespace HalfGripMiniMap
 			Frame = Rgb(0x222222),
 		};
 
+		/// <summary>
+		/// The Open World, whose map is the colours of its own tile pictures: only the ring round the map and the ground where a tile is
+		/// not loaded yet come from here, in the dark green of its woods.
+		/// </summary>
+		internal static readonly Palette OpenWorld = new Palette
+		{
+			Name = "OpenWorld",
+			Ground = Rgb(0x2f3a2a),
+			Road = Rgb(0x46464a),
+			Edge = Rgb(0xeeece4),
+			Frame = Rgb(0x1f261c),
+		};
+
 		/// <summary>The scene's base map from its name, or null for a scene that is none of the game's race maps.</summary>
 		internal static Palette Known(string scene)
 		{

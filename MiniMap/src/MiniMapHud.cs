@@ -89,7 +89,14 @@ namespace HalfGripMiniMap
 				pixels = new PixelMap(size, true);
 				view.texture = pixels.Texture;
 			}
-			pixels.Draw(lap.Get(size, pixels.Room), Race.Palette, Race.Heading, Race.Player, Race.Cars);
+			if (Race.OpenWorld)
+			{
+				pixels.DrawLocal(OpenWorldLink.Tiles, Race.Palette, Race.Heading, Race.MetresPerPixel(pixels), Race.Player, Race.Cars);
+			}
+			else
+			{
+				pixels.Draw(lap.Get(size, pixels.Room), Race.Palette, Race.Heading, Race.Player, Race.Cars);
+			}
 			pixels.Upload();
 			Place();
 		}

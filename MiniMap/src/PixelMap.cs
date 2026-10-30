@@ -129,7 +129,7 @@ namespace HalfGripMiniMap
 			Color32[] source = image.Pixels;
 			Color32 ground = palette.Ground;
 			Color32 frame = palette.Frame;
-			Color32 rim = Color.Lerp(palette.Frame, Color.white, 0.35f);
+			Color32 rim = RimColour(palette);
 
 			for (int y = 0; y < Size; y++)
 			{
@@ -138,19 +138,9 @@ namespace HalfGripMiniMap
 					float ox = x + 0.5f - half;
 					float oy = y + 0.5f - half;
 					int at = y * Size + x;
-					if (Round)
+					if (Rim(ox, oy, frame, rim, at))
 					{
-						float d = Mathf.Sqrt(ox * ox + oy * oy);
-						if (d > half)
-						{
-							Pixels[at] = Clear;
-							continue;
-						}
-						if (d > half - Ring)
-						{
-							Pixels[at] = d > half - 1f ? Outline : d > half - Ring + 1f ? frame : rim;
-							continue;
-						}
+						continue;
 					}
 					// The map turns the other way to the car: un-turn the screen point to find the map point under it.
 					float mx = ox * cos + oy * sin;
@@ -169,6 +159,121 @@ namespace HalfGripMiniMap
 			Stamp(small ? SmallArrow : Arrow, PlayerFill, Screen(image, player, cos, sin));
 		}
 
+		/// <summary>
+		/// Draws the Open World round the player, in the middle, turned so <paramref name="heading"/> points up, <paramref name="metres"/>
+		/// to a map pixel. A map pixel is wider than a tile pixel at most sizes, so it looks at a few points across itself and shows the
+		/// highest ranked (see <see cref="WorldTiles"/>): roads and rivers stay unbroken however small the map. Cars out of sight are kept
+		/// at the rim, so the way to another player shows; a small N at the rim points north, as there is no lap to steer by.
+		/// </summary>
+		internal void DrawLocal(WorldTiles world, Palette palette, float heading, float metres, Vector3 player, List<KeyValuePair<Vector3, Marker>> cars)
+		{
+			float rad = heading * Mathf.Deg2Rad;
+			float cos = Mathf.Cos(rad);
+			float sin = Mathf.Sin(rad);
+			float half = Size * 0.5f;
+			Color32 ground = palette.Ground;
+			Color32 frame = palette.Frame;
+			Color32 rim = RimColour(palette);
+			int looks = Mathf.Clamp(Mathf.CeilToInt(metres * world.TilePixels / world.TileSize), 1, 4);
+
+			for (int y = 0; y < Size; y++)
+			{
+				for (int x = 0; x < Size; x++)
+				{
+					float ox = x + 0.5f - half;
+					float oy = y + 0.5f - half;
+					int at = y * Size + x;
+					if (Rim(ox, oy, frame, rim, at))
+					{
+						continue;
+					}
+					// The middle decides the land; a point anywhere across the pixel can put a road or water on it.
+					Color32 colour = ground;
+					byte best = 0;
+					if (world.Sample((ox * cos + oy * sin) * metres, (-ox * sin + oy * cos) * metres, out Color32 c, out byte r))
+					{
+						colour = c;
+						best = r;
+					}
+					if (looks > 1)
+					{
+						for (int j = 0; j < looks; j++)
+						{
+							float sy = oy + (j + 0.5f) / looks - 0.5f;
+							for (int i = 0; i < looks; i++)
+							{
+								float sx = ox + (i + 0.5f) / looks - 0.5f;
+								if (world.Sample((sx * cos + sy * sin) * metres, (-sx * sin + sy * cos) * metres, out c, out r) && r > best)
+								{
+									colour = c;
+									best = r;
+								}
+							}
+						}
+					}
+					Pixels[at] = colour;
+				}
+			}
+
+			bool small = Size < SmallBelow;
+			float edge = Round ? half - Ring - 3f : half - 3f;
+			foreach (KeyValuePair<Vector3, Marker> car in cars)
+			{
+				Vector2 d = new Vector2(car.Key.x - player.x, car.Key.z - player.z) / metres;
+				Stamp(small ? SmallDot : Dot, car.Value == Marker.Remote ? RemoteFill : BotFill, Pixel(Pin(Turn(d, cos, sin), edge)));
+			}
+			Stamp(North, PlayerFill, Pixel(Pin(Turn(new Vector2(0f, 1000f), cos, sin), edge - 1f)));
+			Stamp(small ? SmallArrow : Arrow, PlayerFill, Pixel(Vector2.zero));
+		}
+
+		/// <summary>The N at the rim of a local map: white on a dark plate, rows from the top.</summary>
+		private static readonly string[] North =
+		{
+			"######",
+			"#o##o#",
+			"#oo#o#",
+			"#o#oo#",
+			"#o##o#",
+			"######",
+		};
+
+		/// <summary>A point east, north of the middle in map pixels, turned with the map.</summary>
+		private static Vector2 Turn(Vector2 m, float cos, float sin) => new Vector2(m.x * cos - m.y * sin, m.x * sin + m.y * cos);
+
+		/// <summary>Brings a point from the middle back to <paramref name="edge"/> pixels out if it is further: round or square, as the map.</summary>
+		private Vector2 Pin(Vector2 p, float edge)
+		{
+			float far = Round ? p.magnitude : Mathf.Max(Mathf.Abs(p.x), Mathf.Abs(p.y));
+			return far > edge ? p * (edge / far) : p;
+		}
+
+		/// <summary>The map pixel of a point given from the middle.</summary>
+		private Vector2Int Pixel(Vector2 p) => new Vector2Int(Mathf.FloorToInt(Size * 0.5f + p.x), Mathf.FloorToInt(Size * 0.5f + p.y));
+
+		private static Color32 RimColour(Palette palette) => Color.Lerp(palette.Frame, Color.white, 0.35f);
+
+		/// <summary>On a round map, sets the pixels outside the circle and in the ring round it and says so; the rest is the map's own.</summary>
+		private bool Rim(float ox, float oy, Color32 frame, Color32 rim, int at)
+		{
+			if (!Round)
+			{
+				return false;
+			}
+			float half = Size * 0.5f;
+			float d = Mathf.Sqrt(ox * ox + oy * oy);
+			if (d > half)
+			{
+				Pixels[at] = Clear;
+				return true;
+			}
+			if (d > half - Ring)
+			{
+				Pixels[at] = d > half - 1f ? Outline : d > half - Ring + 1f ? frame : rim;
+				return true;
+			}
+			return false;
+		}
+
 		/// <summary>Fills the map with one colour: the GPS screen before a race has a lap to show.</summary>
 		internal void Blank(Color32 colour)
 		{
@@ -181,10 +286,7 @@ namespace HalfGripMiniMap
 		/// <summary>Where a world position is on the turned map, in its pixels from the bottom left corner.</summary>
 		private Vector2Int Screen(TrackImage image, Vector3 world, float cos, float sin)
 		{
-			Vector2 m = image.ToPixels(world) / TrackImage.Detail;
-			float x = m.x * cos - m.y * sin;
-			float y = m.x * sin + m.y * cos;
-			return new Vector2Int(Mathf.FloorToInt(Size * 0.5f + x), Mathf.FloorToInt(Size * 0.5f + y));
+			return Pixel(Turn(image.ToPixels(world) / TrackImage.Detail, cos, sin));
 		}
 
 		/// <summary>Draws a pixel shape centred on a point, inside the ring of a round map.</summary>
