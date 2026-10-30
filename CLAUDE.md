@@ -121,7 +121,7 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 ## Status (keep current)
 
 - **Released:** 1.2.0 on `main` (PR #13, merged): poke the GPS (left click taps, right click taps and zooms).
-- **Open:** 1.2.1 on `claude/vibrant-turing-3uafvm` (PR below): after the owner's first test of 1.2.0, the GPS starts at the middle
+- **Open:** 1.2.1 on `claude/vibrant-turing-3uafvm`, PR #14: after the owner's first test of 1.2.0, the GPS starts at the middle
   view and right click goes out, in, back (done); the hand sank behind the screen after a moment (collider moved in front, done);
   the screen fought its casing when leaning (screen lifted in front of it, done). Compiles; preview checked; not tested in game.
 - **Waiting on the owner:** an in-game test of 1.2.1: the hand stays in front of the screen, no fighting when looking over a
