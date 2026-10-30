@@ -50,6 +50,9 @@ player's car, with a marker per car (in the Open World mod, the country round th
   128x128, the GPS in its card style with a ProcTrack lap on its screen, made by `tools/preview` from the mod's own `GpsArt` and
   `PixelMap`. Older loaders ignore the field, so `tools` stays 1.0.2.
 - Work on a branch and open a PR; do not push to `main`.
+- **Keep the Status section below current.** Sessions get their context cleared without warning, and this file is what the next one
+  reads first. After each step that changes the state (a push, a PR opened or merged, a test report from the owner, a decision),
+  update Status in the same commit or the next: what is released, what is open, what waits on whom, and the next step.
 
 ## Checking changes
 
@@ -97,3 +100,14 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
   `-p:OpenWorld=`) draws the README's sheet with `DrawLocal` on tiles made by Open World's own generator round its spawn (a copy of its
   `Streamer.MapPicture`). Look at it after any change to the local map.
 - Not done, still open with the owner: zooming out with speed, and a north-up choice (the player's arrow would then have to turn).
+
+## Status (keep current)
+
+- **Released:** 1.1.0 on `main` (PR #11, merged): Open World mode for both maps. Nothing open.
+- **Waiting on the owner:** the first in-game test of 1.1.0 in the Open World. Ask for screenshots of both maps and `LogOutput.log`
+  with `Debug.VerboseLog=true`; the log should have `linked to the Open World's map` and `an Open World race`.
+- **Open questions for the owner:** zoom out with speed? A north-up option? (Both left out: heading-up, fixed window.)
+- **Known, not yet fixed:** `tools/preview` no longer reproduces the committed `MiniMap/icon.png` exactly (160 pixels differ, round
+  the car markers). It was so on `main` before 1.1.0, and 1.1.0's output is byte-identical to the old code's, so the cause is in the
+  inputs (the laps in `tools/preview/laps/`?) or the commit that made the icon. Find out before the icon is next regenerated.
+- **Branch:** sessions work on `claude/vibrant-turing-3uafvm`; once its PR is merged, restart it from `origin/main`.
