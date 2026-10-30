@@ -20,7 +20,7 @@ player's car, with a marker per car (in the Open World mod, the country round th
 | `MiniMapHud.cs` | The screen minimap: a round `PixelMap` on an overlay canvas in a corner |
 | `Gps.cs` | The GPS item: a clone of the magnet item (no code of its own, MEDIUM, module mount) with its exterior and stats stripped, a new interior prefab and a drawn icon |
 | `GpsScreen.cs` | The GPS on the dash (made by the game's `LoadoutSpawner` from the prefab): measures the cockpit's pixel size (median over the dash's sprites, about 0.05 units), then a casing sprite at that size and a square `PixelMap` screen at twice its resolution, the screen in the unlit sprite material, the casing in its own copy of the lit `SpriteLit` with its texture set (the Lit shader reads the material's `_BaseMap`, so each dash sprite has its own copy); the zoom (middle, out, in; session only), the tap's time; the screen stands 0.02 in front of the casing and the touch collider 0.1 in front of the screen |
-| `GpsTap.cs` | Poking the GPS: `GpsButton`, the game's own `Clickable` (with an `InteriorSquareCollider` the size of the screen at `sortingLayer` -100, put on by `GpsScreen`), which the cockpit hand clicks left (tap) and right (tap and next zoom), counted only while the hand is locked on; and the main menu's `ScreenTap` clip, found among the loaded assets at scene loads and kept in a static field |
+| `GpsTap.cs` | Poking the GPS: `GpsButton`, the game's own `Clickable` (with an `InteriorSquareCollider` the size of the screen at `sortingLayer` -100, put on by `GpsScreen`), which the cockpit hand clicks left (tap) and right (tap and next zoom); and the main menu's `ScreenTap` clip, found among the loaded assets at scene loads and kept in a static field, split into its separate sounds (read off the samples), one played at random per poke |
 | `GpsArt.cs` | The GPS casing (grey speckled plastic box with top and side faces on a base plate, after the jumper's key cap) and shop icon, drawn as pixel arrays |
 | `TrackImage.cs` | The lap from above in flat palette colours (ground, road, edge lines, start line) at 4x the minimap's resolution, fitted inside the round window |
 | `PixelMap.cs` | A shown map (point filtered, round or square): rebuilt each frame by sampling `TrackImage` turned to the player's heading (`DrawLocal`: the Open World's tiles round the car), plus the ring and car markers |
@@ -102,7 +102,7 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
   `Streamer.MapPicture`). Look at it after any change to the local map.
 - Not done, still open with the owner: zooming out with speed, and a north-up choice (the player's arrow would then have to turn).
 
-## The GPS tap and zoom (1.2.0 to 1.2.2)
+## The GPS tap and zoom (1.2.0 to 1.2.3)
 
 - The main menu's tap is `VhsScreenTap` (sets `_VhsTap` for the full-screen VHS shader, `VhsRendererFeature`) and a VariedSound with
   the clip `ScreenTap` (pitch +-0.5). The shader works on the whole camera image and no race scene has a `VhsEffect` volume, so
@@ -121,21 +121,27 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
   `Grabber`/`Grabbable`/`LinearObject`, as the GPS does. Only `Grabber` calls `Clickable.Click`, on a press while its hover pick is
   the collider; the pick takes the highest `sortingLayer` under the hand, then the nearest. The GPS was at 0 like the controls (guns
   and magazines are 0 too) and, lifted in 1.2.1, nearest, so it won clicks meant for controls near it. Now its collider is at -100
-  (the game's own go from -1 to 2), and `GpsButton` ignores a click unless the hand is locked on: `Grabber.Hovered` is its collider,
-  `CurrentHandState` is `Interactible`, for 0.1 s or more (verbose log: `click ignored`). Menus mute the hand
-  (`GameInput.Muted`), so clicks there do not reach it.
+  (the game's own go from -1 to 2). Menus mute the hand (`GameInput.Muted`), so clicks there do not reach it. 1.2.2 also ignored
+  clicks until the hand had been locked on for 0.1 s; the owner's log showed it only threw away real clicks (the hand was already
+  `Interactible`), so 1.2.3 took it out.
+- The stray sounds were not clicks (owner's log of 1.2.2): the `ScreenTap` clip is 22.77 s long and was played to its end on every
+  poke. The owner thinks it is the menu's whole set of tap sounds (the menu seems to play one at random; as decompiled,
+  `VariedSound` plays its one clip from the start with +-0.5 pitch, so the log line below decides). `GpsTap.Measure` reads its
+  samples (`AudioClip.GetData`, 10 ms loudness steps) and splits it into sounds separated by 0.15 s of quiet (under 10% of the
+  peak), logged as `the tap sound holds N sound(s), at a-b, ...`. `Play` starts its own source (from
+  `SoundController.Create2DAudioSource`) at a random one (`AudioSource.time`) and destroys it at its end. Unreadable samples (a
+  compressed clip) play the first 0.4 s.
 
 ## Status (keep current)
 
-- **Released:** 1.2.1 on `main` (PR #14, merged): middle zoom first, hand and screen in front of the dash.
-- **Open:** 1.2.2 on `claude/vibrant-turing-3uafvm`, PR #15: the owner heard stray taps while using other controls. The GPS's
-  collider is now below every control in Grabber's pick, and a click counts only while the hand is locked onto the GPS (the
-  owner's idea). Compiles; not tested in game.
-- **Waiting on the owner:** an in-game test of 1.2.2: no more stray taps when using levers, guns and magazines near the GPS; poking
-  it on purpose still works (point, wait for the hand to lock on, click). With `Debug.VerboseLog=true`, ignored clicks are logged
-  (`click ignored`). Still to confirm from 1.2.1: no fighting when looking over a shoulder, the tap sound
-  (`kept the main menu's tap sound`), a gamepad if there is one; and the first Open World test (screenshots of both maps; the log
-  should have `linked to the Open World's map` and `an Open World race`).
+- **Released:** 1.2.2 on `main` (PR #15, merged): the GPS's collider below every control in Grabber's pick, and a 0.1 s lock-on.
+- **Open:** 1.2.3 on `claude/vibrant-turing-3uafvm`, PR #16: the stray taps were the 22.77 s `ScreenTap` clip played to its end;
+  it is now split into its separate sounds and a poke plays one at random (the owner's reading: it is the menu's set of taps). The lock-on timer is gone (it ate real clicks). Compiles; not tested in game.
+- **Waiting on the owner:** an in-game test of 1.2.3: no more stray tap sounds, clicks on the GPS answer at once. The log line
+  `the tap sound holds N sound(s), at ...` tells what the clip holds (if it is one tap with a noisy tail, play only the first); if
+  it says the samples cannot be read, the first 0.4 s plays and may need tuning. Still to confirm: no fighting when looking over a shoulder, a gamepad
+  if there is one; and the first Open World test (screenshots of both maps; the log should have `linked to the Open World's map`
+  and `an Open World race`).
 - **Open questions for the owner:** zoom out with speed? A north-up option? (Both left out: heading-up, fixed window.)
 - **Known, not yet fixed:** `tools/preview` no longer reproduces the committed `MiniMap/icon.png` exactly (160 pixels differ, round
   the car markers). It was so on `main` before 1.1.0, and 1.1.0's output is byte-identical to the old code's, so the cause is in the
