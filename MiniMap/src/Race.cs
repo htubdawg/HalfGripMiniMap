@@ -38,9 +38,10 @@ namespace HalfGripMiniMap
 
 		/// <summary>
 		/// Metres to a pixel of a map showing the Open World: <c>OpenWorld.ViewTiles</c> tiles across the inside of its rim, so the screen
-		/// minimap and the GPS show the same stretch of country at their own resolutions.
+		/// minimap and the GPS show the same stretch of country at their own resolutions; <paramref name="zoom"/> times less at the GPS's
+		/// closer views.
 		/// </summary>
-		internal static float MetresPerPixel(PixelMap map) => Mod.ViewTiles.Value * OpenWorldLink.Tiles.TileSize / Mathf.Max(8, map.Size - 2 * map.Room);
+		internal static float MetresPerPixel(PixelMap map, int zoom = 1) => Mod.ViewTiles.Value * OpenWorldLink.Tiles.TileSize / Mathf.Max(8, map.Size - 2 * map.Room) / Mathf.Max(1, zoom);
 
 		internal static void OnSceneLoaded(Scene loaded)
 		{
@@ -167,24 +168,26 @@ namespace HalfGripMiniMap
 		}
 	}
 
-	/// <summary>One map's picture of the lap at its own size, drawn again when the race's lap or colours change.</summary>
+	/// <summary>One map's picture of the lap at its own size and zoom, drawn again when the race's lap or colours or the zoom change.</summary>
 	internal sealed class LapCache
 	{
 		private TrackImage image;
 		private int version = -1;
 		private int size;
 		private int room;
+		private int zoom;
 
-		/// <summary>The lap for a map <paramref name="mapSize"/> pixels wide with <paramref name="mapRoom"/> pixels kept clear at its rim.</summary>
-		internal TrackImage Get(int mapSize, int mapRoom)
+		/// <summary>The lap for a map <paramref name="mapSize"/> pixels wide with <paramref name="mapRoom"/> pixels kept clear at its rim, <paramref name="mapZoom"/> times the whole lap.</summary>
+		internal TrackImage Get(int mapSize, int mapRoom, int mapZoom = 1)
 		{
-			if (image == null || version != Race.Version || size != mapSize || room != mapRoom)
+			if (image == null || version != Race.Version || size != mapSize || room != mapRoom || zoom != mapZoom)
 			{
-				image = TrackImage.Build(Race.Line.sampledPoints, Race.Palette, mapSize, mapRoom);
+				image = TrackImage.Build(Race.Line.sampledPoints, Race.Palette, mapSize, mapRoom, mapZoom);
 				version = Race.Version;
 				size = mapSize;
 				room = mapRoom;
-				Mod.Info("Minimap: drew the lap " + mapSize + " px wide, " + (image.Scale / TrackImage.Detail).ToString("0.000") + " px/m");
+				zoom = mapZoom;
+				Mod.Info("Minimap: drew the lap " + mapSize + " px wide at zoom " + mapZoom + ", " + (image.Scale / image.Detail).ToString("0.000") + " px/m");
 			}
 			return image;
 		}

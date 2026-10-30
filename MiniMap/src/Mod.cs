@@ -170,6 +170,8 @@ namespace HalfGripMiniMap
 			Gps.Register(ctx);
 			ctx.OnSceneLoaded(Race.OnSceneLoaded);
 			ctx.OnSceneLoaded(OpenWorldLink.OnSceneLoaded);
+			ctx.OnSceneLoaded(GpsTap.OnSceneLoaded);
+			GpsTap.Find();
 
 			hud = new GameObject("MiniMapHud");
 			UnityEngine.Object.DontDestroyOnLoad(hud);

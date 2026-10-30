@@ -9,6 +9,9 @@ namespace HalfGripMiniMap
 	/// sprites on the mount it was put on, then redraws the screen's <see cref="PixelMap"/> every frame from the <see cref="Race"/>. When
 	/// the GPS settings change (the config file is re-read while the game runs, see <see cref="Mod"/>) it builds itself again, so its size
 	/// and place on the dash can be tuned without restarting.
+	///
+	/// The cockpit hand can poke the screen as it can the main menu's: a left click only taps it (the menu's tap, see
+	/// <see cref="PixelMap.Tap"/>, and its sound), a right click taps it and steps to the next of <see cref="Zooms"/> views.
 	/// </summary>
 	internal sealed class GpsScreen : MonoBehaviour
 	{
@@ -27,6 +30,13 @@ namespace HalfGripMiniMap
 		private bool lit;
 		private string built;
 		private bool failed;
+		private float tappedAt = float.NegativeInfinity;
+
+		/// <summary>The views a right click steps through: the whole lap (in the Open World, <c>OpenWorld.ViewTiles</c> across), then two and four times closer, round the car.</summary>
+		private const int Zooms = 3;
+		/// <summary>The view the GPS shows, kept from race to race for the session (not saved), like the screen minimap's K.</summary>
+		private static int zoomLevel;
+		private static int Zoom => 1 << zoomLevel;
 
 		private void Start()
 		{
@@ -147,6 +157,16 @@ namespace HalfGripMiniMap
 			screenSprite = Sprite.Create(map.Texture, new Rect(0, 0, screen, screen), new Vector2(0.5f, 0.5f), ScreenDetail / texel, 0, SpriteMeshType.FullRect);
 			Vector3 middle = foot + new Vector3((casing.ScreenX + hole * 0.5f - casing.Width * 0.5f) * texel, (casing.ScreenY + hole * 0.5f) * texel, 0f);
 			screenPart = Part("Screen", screenSprite, material, middle, 1, layer).gameObject;
+			// Exactly the screen, no wider (the hand's grab tolerance scales hitBoxExpand), in the dash's plane like its levers' colliders.
+			InteriorSquareCollider target = screenPart.AddComponent<InteriorSquareCollider>();
+			target.width = target.height = hole * texel;
+			target.hitBoxExpand = 0f;
+			target.localNormalPlane = Vector3.forward;
+			target.sortingLayer = 0;
+			GpsButton button = screenPart.AddComponent<GpsButton>();
+			button.attachedCollider = target;
+			button.Left = Tap;
+			button.Right = NextZoom;
 			Mod.Info("GPS: on " + (transform.parent != null ? transform.parent.name : "?") + ", " + casing.Width + "x" + casing.Height + " px casing, " + screen + " px screen, " + (casing.Width * texel).ToString("0.00") + " units wide, foot " + foot.ToString("0.00") + ", casing material '" + (lit ? Gps.Lit.name + "' (" + Gps.Lit.shader.name + ", own copy)" : (material != null ? material.name : "default") + "'"));
 		}
 
@@ -235,16 +255,18 @@ namespace HalfGripMiniMap
 				Race.Tick();
 				if (Race.Ready && Race.OpenWorld)
 				{
-					map.DrawLocal(OpenWorldLink.Tiles, Race.Palette, Race.Heading, Race.MetresPerPixel(map), Race.Player, Race.Cars);
+					map.DrawLocal(OpenWorldLink.Tiles, Race.Palette, Race.Heading, Race.MetresPerPixel(map, Zoom), Race.Player, Race.Cars);
 				}
 				else if (Race.Ready)
 				{
-					map.Draw(lap.Get(map.Size, map.Room), Race.Palette, Race.Heading, Race.Player, Race.Cars);
+					map.Draw(lap.Get(map.Size, map.Room, Zoom), Race.Palette, Race.Heading, Race.Player, Race.Cars);
 				}
 				else
 				{
 					map.Blank(NoSignal);
 				}
+				// Unscaled, as the menu's: the slow-mo buttons do not slow the screen down.
+				map.Tap(Time.unscaledTime - tappedAt);
 				map.Upload();
 			}
 			catch (Exception e)
@@ -252,6 +274,20 @@ namespace HalfGripMiniMap
 				failed = true;
 				Mod.Log.LogWarning("GPS: stopped after an error: " + e);
 			}
+		}
+
+		/// <summary>A poke at the screen: the menu's tap on it, from the middle (the hand points at the screen, not at a place on it).</summary>
+		private void Tap()
+		{
+			tappedAt = Time.unscaledTime;
+			GpsTap.Play(gameObject);
+		}
+
+		private void NextZoom()
+		{
+			Tap();
+			zoomLevel = (zoomLevel + 1) % Zooms;
+			Mod.Info("GPS: zoom " + Zoom + (zoomLevel == 0 ? " (the whole view)" : " (round the car)"));
 		}
 
 		/// <summary>Takes down the parts, textures and sprites of the last build.</summary>

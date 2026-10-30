@@ -27,6 +27,7 @@ namespace HalfGripMiniMap
 	///   gps-dash.png  the GPS as on the dash (38 casing pixels wide, the screen at twice that resolution), 4x
 	///   gps-icon.png  the shop icon (26x24, as Gps.IconWidth/IconHeight), 6x
 	///   icon.png      the mod's picture for the mod manager, 128x128: copy it to MiniMap/icon.png
+	///   gps-zoom.png  the GPS screen at its three zooms, then a tap on it 0, 0.1, 0.2 and 0.35 s on, 4x
 	/// and checks that the shop icon is not blank. docs/gps.png was put together from the first two.
 	/// </summary>
 	internal static class Program
@@ -49,6 +50,7 @@ namespace HalfGripMiniMap
 			Color32[] icon = GpsArt.Icon(IconWidth, IconHeight);
 			Png.Save(Path.Combine(dir, "gps-icon.png"), icon, IconWidth, IconHeight, 6);
 			ModIcon(Lap(laps, 23), Path.Combine(dir, "icon.png"));
+			Zooms(Lap(laps, 72), Path.Combine(dir, "gps-zoom.png"));
 
 			int drawn = 0;
 			foreach (Color32 c in icon)
@@ -72,10 +74,10 @@ namespace HalfGripMiniMap
 		}
 
 		/// <summary>The lap on a square screen <paramref name="screen"/> pixels wide, the player at point <paramref name="at"/>, three bots and a Multiplayer car.</summary>
-		private static PixelMap Screen(List<Vector3> pts, int screen, int at)
+		private static PixelMap Screen(List<Vector3> pts, int screen, int at, int zoom = 1)
 		{
 			PixelMap map = new PixelMap(screen, false);
-			TrackImage img = TrackImage.Build(pts, Palettes.Forest, screen, map.Room);
+			TrackImage img = TrackImage.Build(pts, Palettes.Forest, screen, map.Room, zoom);
 			Vector3 f = pts[at + 1] - pts[at - 1];
 			float heading = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
 			var cars = new List<KeyValuePair<Vector3, Marker>>
@@ -96,6 +98,36 @@ namespace HalfGripMiniMap
 			PixelMap map = Screen(pts, hole * 2, 260);
 			Color32[] px = Compose(casing, map, 2, out int w, out int h);
 			Png.Save(path, px, w, h, 4);
+		}
+
+		/// <summary>The dash GPS's screen at zooms 1, 2 and 4, then at zoom 1 at four moments of a tap, side by side with a gap of 2.</summary>
+		private static void Zooms(List<Vector3> pts, string path)
+		{
+			int screen = (38 - GpsArt.Dash.ExtraWidth) * 2;
+			List<PixelMap> maps = new List<PixelMap>();
+			foreach (int zoom in new[] { 1, 2, 4 })
+			{
+				maps.Add(Screen(pts, screen, 260, zoom));
+			}
+			foreach (float age in new[] { 0f, 0.1f, 0.2f, 0.35f })
+			{
+				PixelMap map = Screen(pts, screen, 260);
+				map.Tap(age);
+				maps.Add(map);
+			}
+			int w = maps.Count * (screen + 2) - 2;
+			Color32[] px = new Color32[w * screen];
+			for (int i = 0; i < maps.Count; i++)
+			{
+				for (int y = 0; y < screen; y++)
+				{
+					for (int x = 0; x < screen; x++)
+					{
+						px[y * w + i * (screen + 2) + x] = maps[i].Pixels[y * screen + x];
+					}
+				}
+			}
+			Png.Save(path, px, w, screen, 4);
 		}
 
 		/// <summary>The mod manager's picture: the GPS in its card style, 4 pixels per casing pixel, a lap on its screen at 2 per pixel.</summary>
