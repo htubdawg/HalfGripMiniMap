@@ -11,8 +11,9 @@ namespace HalfGripMiniMap
 	/// menu. Not found, the GPS is tapped in silence.
 	///
 	/// The clip is much longer than one tap (22.8 s in game 0.418), and played to its end it went on making tap noises long after the
-	/// poke (owner's test of 1.2.2). So only its first sound is played: where that ends is read off the clip's samples when it is found
-	/// (<see cref="Measure"/>), and the GPS's own audio source is destroyed, which stops it, at that point.
+	/// poke (owner's test of 1.2.2). It seems to be the whole set of the menu's tap sounds one after another, so each poke plays one of
+	/// them at random: where each starts and ends is read off the clip's samples when it is found (<see cref="Measure"/>), the GPS's own
+	/// audio source starts at one, and is destroyed, which stops it, at its end.
 	/// </summary>
 	internal static class GpsTap
 	{
@@ -28,7 +29,8 @@ namespace HalfGripMiniMap
 		private const float Quiet = 0.1f;
 
 		private static AudioClip clip;
-		private static float length = FallbackLength;
+		/// <summary>The separate sounds in the clip, start and end in seconds; just its start when the samples cannot be read.</summary>
+		private static readonly System.Collections.Generic.List<Vector2> sounds = new System.Collections.Generic.List<Vector2>();
 		private static bool missed;
 
 		internal static void OnSceneLoaded(Scene loaded) => Find();
@@ -59,12 +61,14 @@ namespace HalfGripMiniMap
 		}
 
 		/// <summary>
-		/// Finds where the clip's first sound ends: the loudness in <see cref="Window"/> steps, the first step over <see cref="Quiet"/> of
-		/// the loudest, then the first quiet stretch of <see cref="Gap"/> after it. Also logs where every loud burst starts, which tells
-		/// what the long clip holds. Unreadable samples leave <see cref="FallbackLength"/>.
+		/// Splits the clip into its separate sounds: the loudness in <see cref="Window"/> steps, a sound starting at a step over
+		/// <see cref="Quiet"/> of the loudest after a quiet stretch of <see cref="Gap"/>, and ending where the next such stretch begins.
+		/// Logs them all, which tells what the long clip holds. Unreadable samples leave the clip's first <see cref="FallbackLength"/>.
 		/// </summary>
 		private static void Measure(AudioClip c)
 		{
+			sounds.Clear();
+			sounds.Add(new Vector2(0f, Mathf.Min(FallbackLength, c.length)));
 			try
 			{
 				int channels = Mathf.Max(1, c.channels);
@@ -96,30 +100,41 @@ namespace HalfGripMiniMap
 				}
 				float quiet = peak * Quiet;
 				int gap = Mathf.CeilToInt(Gap / Window);
-				System.Collections.Generic.List<string> bursts = new System.Collections.Generic.List<string>();
-				int firstEnd = -1;
+				System.Collections.Generic.List<Vector2> found = new System.Collections.Generic.List<Vector2>();
+				int from = -1;
 				int run = gap;
 				for (int w = 0; w < windows; w++)
 				{
 					if (loud[w] > quiet)
 					{
-						if (run >= gap)
+						if (from < 0)
 						{
-							bursts.Add((w * Window).ToString("0.00"));
+							from = w;
 						}
 						run = 0;
 					}
-					else
+					else if (++run == gap && from >= 0)
 					{
-						run++;
-						if (run == gap && bursts.Count > 0 && firstEnd < 0)
-						{
-							firstEnd = w - gap + 1;
-						}
+						found.Add(Span(from, w - gap + 1, c.length));
+						from = -1;
 					}
 				}
-				length = Mathf.Clamp((firstEnd < 0 ? windows : firstEnd) * Window + 0.05f, 0.05f, c.length);
-				Mod.Info("GPS: the tap sound has " + bursts.Count + " loud burst(s), starting at " + string.Join(", ", bursts.GetRange(0, Mathf.Min(20, bursts.Count))) + (bursts.Count > 20 ? ", ..." : "") + " s; playing its first " + length.ToString("0.00") + " s");
+				if (from >= 0)
+				{
+					found.Add(Span(from, windows, c.length));
+				}
+				if (found.Count == 0)
+				{
+					return;
+				}
+				sounds.Clear();
+				sounds.AddRange(found);
+				System.Text.StringBuilder text = new System.Text.StringBuilder();
+				for (int i = 0; i < sounds.Count && i < 40; i++)
+				{
+					text.Append(i > 0 ? ", " : "").Append(sounds[i].x.ToString("0.00")).Append("-").Append(sounds[i].y.ToString("0.00"));
+				}
+				Mod.Info("GPS: the tap sound holds " + sounds.Count + " sound(s), at " + text + (sounds.Count > 40 ? ", ..." : "") + " s; a poke plays one at random");
 			}
 			catch (Exception e)
 			{
@@ -127,7 +142,10 @@ namespace HalfGripMiniMap
 			}
 		}
 
-		/// <summary>Plays the first sound of the tap from <paramref name="on"/>, so it goes to the mixer group of the cockpit it is in.</summary>
+		/// <summary>One sound from step <paramref name="from"/> to step <paramref name="to"/>, in seconds, with a little tail.</summary>
+		private static Vector2 Span(int from, int to, float length) => new Vector2(from * Window, Mathf.Min(length, to * Window + 0.05f));
+
+		/// <summary>Plays one of the tap sounds from <paramref name="on"/>, so it goes to the mixer group of the cockpit it is in.</summary>
 		internal static void Play(GameObject on)
 		{
 			if (clip == null)
@@ -139,15 +157,17 @@ namespace HalfGripMiniMap
 				}
 				return;
 			}
+			Vector2 sound = sounds.Count > 0 ? sounds[UnityEngine.Random.Range(0, sounds.Count)] : new Vector2(0f, FallbackLength);
 			float pitch = 1f + UnityEngine.Random.Range(-PitchJitter, PitchJitter);
 			AudioSource source = SoundController.Create2DAudioSource(clip, on, 1f, pitch);
 			if (source == null)
 			{
 				return;
 			}
+			source.time = sound.x;
 			source.Play();
-			// Destroying the source stops it: the rest of the clip is never heard.
-			UnityEngine.Object.Destroy(source.gameObject, length / pitch);
+			// Destroying the source stops it: nothing past this sound is heard.
+			UnityEngine.Object.Destroy(source.gameObject, Mathf.Max(0.05f, sound.y - sound.x) / pitch);
 		}
 	}
 
