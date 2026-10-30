@@ -9,7 +9,8 @@ namespace HalfGripMiniMap
 	/// line and the colours for it, the player's car and every other car. Whoever draws first in a frame brings it up to date
 	/// (<see cref="Tick"/>); the rest read it. A map mod may build or replace the track line some time after the scene loads (ProcTrack
 	/// does, in its own scene callback), so the line is checked twice a second, and <see cref="Version"/> goes up whenever the lap or its
-	/// colours change so each map knows to draw the lap again.
+	/// colours change so each map knows to draw the lap again. In the Open World (<see cref="OpenWorld"/>) there is no lap worth showing:
+	/// the maps draw the country round the car from <see cref="OpenWorldLink.Tiles"/> instead.
 	/// </summary>
 	internal static class Race
 	{
@@ -32,6 +33,15 @@ namespace HalfGripMiniMap
 		/// <summary>True while there is a race with a lap and a player car to show.</summary>
 		internal static bool Ready { get; private set; }
 
+		/// <summary>True in an Open World race: the maps show the land round the car, not the lap.</summary>
+		internal static bool OpenWorld { get; private set; }
+
+		/// <summary>
+		/// Metres to a pixel of a map showing the Open World: <c>OpenWorld.ViewTiles</c> tiles across the inside of its rim, so the screen
+		/// minimap and the GPS show the same stretch of country at their own resolutions.
+		/// </summary>
+		internal static float MetresPerPixel(PixelMap map) => Mod.ViewTiles.Value * OpenWorldLink.Tiles.TileSize / Mathf.Max(8, map.Size - 2 * map.Room);
+
 		internal static void OnSceneLoaded(Scene loaded)
 		{
 			Scene = loaded.name;
@@ -41,6 +51,7 @@ namespace HalfGripMiniMap
 			drawn = null;
 			nextSearch = 0f;
 			Ready = false;
+			OpenWorld = false;
 			Cars.Clear();
 		}
 
@@ -56,6 +67,11 @@ namespace HalfGripMiniMap
 			if (Ready)
 			{
 				Gather();
+				if (OpenWorld)
+				{
+					// Corners of the square GPS reach half as far again as its sides, and a pixel's looks a little past them.
+					OpenWorldLink.Update(Player, Mod.ViewTiles.Value * OpenWorldLink.Tiles.TileSize * 0.75f + 10f);
+				}
 			}
 		}
 
@@ -75,6 +91,18 @@ namespace HalfGripMiniMap
 					return false;
 				}
 				Mod.Info("Minimap: race found in scene " + Scene);
+			}
+			if (OpenWorldLink.Active)
+			{
+				if (!OpenWorld)
+				{
+					OpenWorld = true;
+					Line = null;
+					Palette = Palettes.OpenWorld;
+					Version++;
+					Mod.Info("Minimap: an Open World race, showing " + Mod.ViewTiles.Value.ToString("0.0") + " tiles round the car");
+				}
+				return true;
 			}
 			PathManager line = Manager.lapManager != null ? Manager.lapManager.trackLine : null;
 			if (line == null || line.sampledPoints == null || line.sampledPoints.Count < 8)
@@ -114,7 +142,7 @@ namespace HalfGripMiniMap
 			Player = car.position;
 
 			Cars.Clear();
-			Dictionary<GameObject, LapManager.LeaderboardEntry> board = Manager.lapManager.leaderboard;
+			Dictionary<GameObject, LapManager.LeaderboardEntry> board = Manager.lapManager != null ? Manager.lapManager.leaderboard : null;
 			if (board != null && board.Count > 0)
 			{
 				GameObject self = Manager.lapManager.PlayerCar;

@@ -233,7 +233,11 @@ namespace HalfGripMiniMap
 				casingRenderer.color = new Color(shade, shade, shade, 1f);
 
 				Race.Tick();
-				if (Race.Ready)
+				if (Race.Ready && Race.OpenWorld)
+				{
+					map.DrawLocal(OpenWorldLink.Tiles, Race.Palette, Race.Heading, Race.MetresPerPixel(map), Race.Player, Race.Cars);
+				}
+				else if (Race.Ready)
 				{
 					map.Draw(lap.Get(map.Size, map.Room), Race.Palette, Race.Heading, Race.Player, Race.Cars);
 				}

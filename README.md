@@ -1,10 +1,11 @@
 # MiniMap for Half Grip
 
-**Version 1.0.3** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
+**Version 1.1.0** · for Half Grip Demo 0.418 · needs [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) 1.0.2 or newer
 
 A pixel-art map of the whole lap that turns with your car and shows every racer. Buy a **GPS** for your dash, or switch on the
 **screen minimap**. It works on every map: the game's own, [ProcTrack](https://github.com/htubdawg/ProcTrack)'s procedural maps, and
-other modded maps.
+other modded maps. In the [Open World](https://github.com/htubdawg/HalfGripOpenWorld) mod's free roam it shows the country round your
+car instead.
 
 *100% AI generated code.*
 
@@ -22,6 +23,17 @@ The same map in a corner of the screen (top left, clear of the placement board).
 `Display.Enabled = true` in the config and restart the game. It then shows in every race, and **K** hides or shows it.
 
 ![The minimap on each map and weather](docs/preview.png)
+
+## In the Open World
+
+The [Open World](https://github.com/htubdawg/HalfGripOpenWorld) mod (0.4.6 or newer) is free roam with no lap, so there both maps show
+the country round your car: you in the middle, the way you point up, about 625 m across (`OpenWorld.ViewTiles`). The colours are the
+Open World's own map: fields, woods and towns, rivers and lakes in blue, and the roads by class (trunk road orange, main roads yellow,
+minor roads cream, streets grey, lanes white, farm tracks brown). Roads stay unbroken however small the map. A white **N** at the
+rim points north. Other players are blue dots; one out of sight waits at the rim, in the direction to drive to find them. Ground not
+loaded yet is dark. Without the Open World mod nothing changes.
+
+![The screen minimap in the Open World: heading north, turned, in a town, in the fields with a wider view, ground still loading; and the GPS screen](docs/openworld.png)
 
 ## Colours
 
@@ -97,6 +109,7 @@ saved, so you can change these while the game runs (all but `Display.Enabled`, w
 | `GPS.Width` | `1.9` | Width of the GPS on the dash, in dash units |
 | `GPS.OffsetX`, `GPS.OffsetY` | `0`, `-0.6` | Move the GPS on the dash |
 | `GPS.LitCasing` | `true` | Light the GPS casing like the cockpit (turn it off if the casing does not show) |
+| `OpenWorld.ViewTiles` | `2.5` | In the Open World: how much country both maps show across, in its 250 m tiles (1 to 8) |
 | `Debug.VerboseLog` | `false` | Write each map build to the log |
 
 ## Notes

@@ -11,7 +11,8 @@ namespace HalfGripMiniMap
 	/// A round minimap in a corner of the screen: the whole lap, turned so the way the player's car points is always up, with a marker for
 	/// every car in the race. It is drawn from the race's own track line (the line the lap counter and the bots follow), not from anything
 	/// known about one map, so it works on the game's maps, on ProcTrack's laps and on any other map a mod adds. The colours are chosen from
-	/// the scene the race is in (see <see cref="Palettes"/>).
+	/// the scene the race is in (see <see cref="Palettes"/>). In the Open World mod's free roam, where the lap is only a token loop, the
+	/// maps show the country round the car instead, from the Open World's own tile pictures (see <see cref="OpenWorldLink"/>).
 	/// </summary>
 	public class Mod : HalfGripMod
 	{
@@ -27,6 +28,7 @@ namespace HalfGripMiniMap
 		internal static ConfigEntry<float> GpsOffsetX;
 		internal static ConfigEntry<float> GpsOffsetY;
 		internal static ConfigEntry<bool> GpsLitCasing;
+		internal static ConfigEntry<float> ViewTiles;
 		internal static ConfigEntry<bool> Verbose;
 		internal static ModKey Toggle;
 
@@ -151,6 +153,7 @@ namespace HalfGripMiniMap
 			GpsOffsetX = ctx.Config.Bind("GPS", "OffsetX", 0f, "Moves the GPS sideways on the dash from where the magnet would stand (dash units, right is positive). Takes effect as soon as the file is saved.");
 			GpsOffsetY = ctx.Config.Bind("GPS", "OffsetY", -0.6f, "Moves the GPS up or down on the dash from where the magnet would stand (dash units, up is positive). Takes effect as soon as the file is saved.");
 			GpsLitCasing = ctx.Config.Bind("GPS", "LitCasing", true, "Light the GPS's casing like the rest of the cockpit. Turn it off if the casing does not show (its screen still does). Takes effect as soon as the file is saved.");
+			ViewTiles = ctx.Config.Bind("OpenWorld", "ViewTiles", 2.5f, new ConfigDescription("In the Open World (the Open World mod), how much country the minimap and the GPS show across, in its 250 m tiles: 2.5 is about 625 m. Takes effect as soon as the file is saved.", new AcceptableValueRange<float>(1f, 8f)));
 			Verbose = ctx.Config.Bind("Debug", "VerboseLog", false, "Write each map build (the scene, the palette, the size of the lap) to the BepInEx log.");
 			Migrate(ctx.Config);
 			config = ctx.Config;
@@ -166,6 +169,7 @@ namespace HalfGripMiniMap
 
 			Gps.Register(ctx);
 			ctx.OnSceneLoaded(Race.OnSceneLoaded);
+			ctx.OnSceneLoaded(OpenWorldLink.OnSceneLoaded);
 
 			hud = new GameObject("MiniMapHud");
 			UnityEngine.Object.DontDestroyOnLoad(hud);
