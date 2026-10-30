@@ -11,9 +11,9 @@ namespace HalfGripMiniMap
 	/// menu. Not found, the GPS is tapped in silence.
 	///
 	/// The clip is much longer than one tap (22.8 s in game 0.418), and played to its end it went on making tap noises long after the
-	/// poke (owner's test of 1.2.2). It seems to be the whole set of the menu's tap sounds one after another, so each poke plays one of
-	/// them at random: where each starts and ends is read off the clip's samples when it is found (<see cref="Measure"/>), the GPS's own
-	/// audio source starts at one, and is destroyed, which stops it, at its end.
+	/// poke (owner's test of 1.2.2). Its first sound is the tap; what follows sounds like menu clicks (owner, 1.2.3). So only the first
+	/// is played: where each sound starts and ends is read off the clip's samples when it is found (<see cref="Measure"/>), and the
+	/// GPS's own audio source is destroyed, which stops it, at the first one's end.
 	/// </summary>
 	internal static class GpsTap
 	{
@@ -134,7 +134,7 @@ namespace HalfGripMiniMap
 				{
 					text.Append(i > 0 ? ", " : "").Append(sounds[i].x.ToString("0.00")).Append("-").Append(sounds[i].y.ToString("0.00"));
 				}
-				Mod.Info("GPS: the tap sound holds " + sounds.Count + " sound(s), at " + text + (sounds.Count > 40 ? ", ..." : "") + " s; a poke plays one at random");
+				Mod.Info("GPS: the tap sound holds " + sounds.Count + " sound(s), at " + text + (sounds.Count > 40 ? ", ..." : "") + " s; a poke plays the first");
 			}
 			catch (Exception e)
 			{
@@ -145,7 +145,7 @@ namespace HalfGripMiniMap
 		/// <summary>One sound from step <paramref name="from"/> to step <paramref name="to"/>, in seconds, with a little tail.</summary>
 		private static Vector2 Span(int from, int to, float length) => new Vector2(from * Window, Mathf.Min(length, to * Window + 0.05f));
 
-		/// <summary>Plays one of the tap sounds from <paramref name="on"/>, so it goes to the mixer group of the cockpit it is in.</summary>
+		/// <summary>Plays the clip's first sound from <paramref name="on"/>, so it goes to the mixer group of the cockpit it is in.</summary>
 		internal static void Play(GameObject on)
 		{
 			if (clip == null)
@@ -157,7 +157,7 @@ namespace HalfGripMiniMap
 				}
 				return;
 			}
-			Vector2 sound = sounds.Count > 0 ? sounds[UnityEngine.Random.Range(0, sounds.Count)] : new Vector2(0f, FallbackLength);
+			Vector2 sound = sounds.Count > 0 ? sounds[0] : new Vector2(0f, FallbackLength);
 			float pitch = 1f + UnityEngine.Random.Range(-PitchJitter, PitchJitter);
 			AudioSource source = SoundController.Create2DAudioSource(clip, on, 1f, pitch);
 			if (source == null)
