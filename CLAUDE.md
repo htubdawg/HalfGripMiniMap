@@ -116,7 +116,7 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 
 - **Released:** 1.1.0 on `main` (PR #11, merged): Open World mode for both maps.
 - **Open:** 1.2.0 on `claude/vibrant-turing-3uafvm`: poke the GPS (left click taps it, right click taps and zooms 1x/2x/4x, in races
-  and the Open World). Compiles; preview pictures checked. Not yet tested in game, no PR yet.
+  and the Open World), PR #13. Compiles; preview pictures checked. Not yet tested in game.
 - **Waiting on the owner:** an in-game test of 1.2.0: does the hand turn to its pointing pose over the GPS screen and do both clicks
   work (also with a gamepad), is the tap sound heard (log: `kept the main menu's tap sound`) and at the cockpit's volume, does the
   zoom read well in a race and in the Open World. Also still the first Open World test of 1.1.0 (screenshots of both maps, the log
