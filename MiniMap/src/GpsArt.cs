@@ -43,7 +43,7 @@ namespace HalfGripMiniMap
 
 		internal static readonly Style Dash = new Style { TopRows = 3, SideColumns = 2, PlateRows = 3, PlateReach = 3, Body = 2, Chin = 4 };
 		/// <summary>The shop icon's: the same box, thinner, so a card-sized icon still has a screen worth the name.</summary>
-		private static readonly Style Card = new Style { TopRows = 2, SideColumns = 1, PlateRows = 2, PlateReach = 2, Body = 1, Chin = 3 };
+		internal static readonly Style Card = new Style { TopRows = 2, SideColumns = 1, PlateRows = 2, PlateReach = 2, Body = 1, Chin = 3 };
 
 		/// <summary>A casing round a screen hole.</summary>
 		internal sealed class Casing

@@ -45,16 +45,52 @@ player's car, with a marker per car; and a GPS shop item that shows the same map
   `HalfGripMods\MiniMap\`), not the whole repo download.
 - The GPS's item id `minimap.gps` is saved in runs: never change it.
 - `MiniMap/icon.png` is the mod's picture (`"icon"` in `mod.json`, shown by the HalfGripTools 1.0.5+ mod manager and by installers):
-  128x128, the GPS in its card style with a ProcTrack lap on its screen, made with the same console app as `docs/gps.png` from the
-  mod's own `GpsArt` and `PixelMap`. Older loaders ignore the field, so `tools` stays 1.0.2.
+  128x128, the GPS in its card style with a ProcTrack lap on its screen, made by `tools/preview` from the mod's own `GpsArt` and
+  `PixelMap`. Older loaders ignore the field, so `tools` stays 1.0.2.
 - Work on a branch and open a PR; do not push to `main`.
-- `docs/preview.png` (the README image) was rendered offline: real ProcTrack laps from its `Generator.Make` run in a console app, drawn
-  by a Python port of `TrackImage` and `PixelMap`. Re-render it when the look changes. `docs/gps.png` was made by compiling the mod's
-  own `GpsArt`, `PixelMap`, `TrackImage` and `Palettes` into a console app against `UnityEngine.CoreModule` (their drawing is plain
-  pixel arrays) and running it on a ProcTrack lap.
 
 ## Checking changes
 
-- Compile check: HalfGripTools `tools\check-mods.ps1 -ModsPath <repo> -Mod MiniMap -GameDir <HalfGripRefs>\game`. The same works on
-  Linux with `dotnet build` of an equivalent netstandard2.1 / C# 10 project referencing the refs' `game` folder.
-- In game: copy `MiniMap/` to `<game>\BepInEx\HalfGripMods\`, set `Debug.VerboseLog=true`, read `BepInEx\LogOutput.log`.
+The tools expect the other repos as siblings of this one (override with the arguments or `-p:` properties shown):
+`../halfgriprefs` (game DLLs, scene dumps), `../ProcTrack` (only for `tools/lapdump`), and HalfGripTools anywhere.
+
+- **Compile check** (run before every push): build HalfGripTools once against the refs, then compile the mod:
+  ```
+  dotnet build <HalfGripTools>/HalfGripTools/HalfGripTools.csproj -c Release -p:GameDir=<halfgriprefs>/game
+  tools/check.sh <halfgriprefs>/game <HalfGripTools>/dist/BepInEx/plugins/HalfGripTools/HalfGripTools.dll
+  ```
+  On Windows, HalfGripTools' `tools\check-mods.ps1 -ModsPath <repo> -Mod MiniMap -GameDir <halfgriprefs>\game` does the same.
+- **Pictures** (`tools/preview`): `dotnet run -c Release --project tools/preview -- <out dir>` compiles the mod's own `GpsArt`,
+  `PixelMap`, `TrackImage`, `Palettes` (plain pixel arrays) against `UnityEngine.CoreModule` and writes `gps-dash.png` (the GPS as on
+  the dash), `gps-icon.png` (the shop icon; exits 1 if it is blank) and `icon.png` (copy to `MiniMap/icon.png`; it reproduces the
+  committed one exactly). `docs/gps.png` was put together from the first two. Look at them after any art change.
+- **README sheet:** `python3 tools/preview/minimap_sheet.py tools/preview/laps docs/preview.png` draws the round minimap on every base
+  map and weather. It is a Python port of the round map (as of 0.2.0; it reproduces `docs/preview.png` exactly): keep it in step.
+- **Laps:** `tools/preview/laps/` holds real ProcTrack laps (x,z CSV). `dotnet run -c Release --project tools/lapdump -- <dir> <seed>...`
+  makes more from ProcTrack's own `Generator.Make`.
+- **Game code:** decompile with `ilspycmd -p -o <dir> <halfgriprefs>/game/HalfGrip_Data/Managed/Assembly-CSharp.dll`
+  (`dotnet tool install -g ilspycmd`; set `DOTNET_ROLL_FORWARD=Major` on a newer .NET).
+- **In game** (the owner tests; ask for screenshots and the log): copy `MiniMap/` to `<game>\BepInEx\HalfGripMods\`, set
+  `Debug.VerboseLog=true`, read `BepInEx\LogOutput.log`.
+
+## Next: Open World mode (not started)
+
+The Open World mod (`htubdawg/HalfGripOpenWorld`, 0.4.6+) is a 32 km world with a floating origin; its track line is only a token
+loop, so the lap-fitted map is useless there. Agreed plan, only for Open World (race maps unchanged):
+
+- A **local map round the car**: the car in the middle, a fixed window a few 250-unit tiles across (a new `OpenWorld.ViewTiles`
+  setting), built from Open World's own per-tile map pictures, for both the screen minimap and the GPS. No start line.
+- **Kept in world coordinates** (scene position + origin offset), so origin shifts do not matter; car markers relative to the player.
+- **Open World's public API** (merged in 0.4.6, `OpenWorld/src/MapView.cs`), read by **reflection by name** (each mod is compiled on its
+  own, so MiniMap cannot reference it; find the type `HalfGripOpenWorld.MapView` in the loaded assemblies). All static properties
+  except the one method:
+  - `bool Active`: an Open World race is loaded. Open World mode only when the type exists and this is true.
+  - `double OriginX`, `double OriginZ`: world x, z of the scene's 0,0 (scene position + these = world position).
+  - `float TileSize` (250): tile (tx, tz) covers world x from tx * TileSize to (tx + 1) * TileSize, z the same.
+  - `int TilePixels` (64): a tile's map picture is TilePixels square, about 4 units a pixel.
+  - `int Version`: goes up when a tile's picture is added or removed.
+  - `bool TryGetTile(int tx, int tz, Color32[] into)`: copies the tile's picture (land use, water, roads by class in the colours of
+    its `docs/world.png`, roads at least 2 px wide), rows from the south, x east. False if the tile is not loaded (11x11 tiles are
+    loaded round the car by default). Main thread only.
+- **Still to ask the owner:** the default window size (suggested about 2.5 tiles across), whether it should zoom out with speed, and
+  heading-up (as the race maps) or north-up in Open World.

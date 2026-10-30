@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Draws the mod's pictures with its own drawing code outside the game. How to run it: see Program.cs. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS0436;CS1701;CS1702</NoWarn>
+    <Refs Condition="'$(Refs)' == ''">$(MSBuildThisFileDirectory)../../../halfgriprefs</Refs>
+    <Src>$(MSBuildThisFileDirectory)../../MiniMap/src</Src>
+    <Managed>$(Refs)/game/HalfGrip_Data/Managed</Managed>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Only the files whose drawing is plain pixel arrays; their Unity types are managed structs (Color32, Vector3, Mathf). -->
+    <Compile Include="$(Src)/GpsArt.cs;$(Src)/PixelMap.cs;$(Src)/TrackImage.cs;$(Src)/Palettes.cs;$(Src)/Sampler.cs;Program.cs;Png.cs" />
+    <Reference Include="$(Managed)/UnityEngine.CoreModule.dll;$(Managed)/UnityEngine.PhysicsModule.dll;$(Managed)/UnityEngine.TerrainModule.dll;$(Managed)/Assembly-CSharp.dll;$(Refs)/game/BepInEx/core/BepInEx.dll" />
+  </ItemGroup>
+</Project>
