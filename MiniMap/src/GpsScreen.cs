@@ -186,7 +186,7 @@ namespace HalfGripMiniMap
 			target.width = target.height = hole * texel;
 			target.hitBoxExpand = 0f;
 			target.localNormalPlane = Vector3.forward;
-			target.sortingLayer = 0;
+			target.sortingLayer = GpsButton.SortingLayer;
 			GpsButton button = touch.AddComponent<GpsButton>();
 			button.attachedCollider = target;
 			button.Left = Tap;
