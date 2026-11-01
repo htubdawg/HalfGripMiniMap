@@ -137,7 +137,7 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 - **Released:** 1.2.4 on `main` (PR #17, merged, tag v1.2.4): only the clip's first sound plays; races start zoomed out on the
   whole lap, the Open World in the middle, each with its own zoom.
 - **Open:** README install section rewritten after ProcTrack's: the HalfGripMods installer first (MiniMap under SUGGESTED, or
-  **+ ADD** with the repo URL), the manual steps kept below it. On `claude/vibrant-turing-3uafvm`, no PR yet.
+  **+ ADD** with the repo URL), the manual steps kept below it. On `claude/vibrant-turing-3uafvm`, PR #18.
 - **Waiting on the owner:** an in-game test of 1.2.4 (released, untested): one clean tap per poke, the starting zooms. Still to confirm: no fighting
   when looking over a shoulder, a gamepad if there is one; and the first Open World test (screenshots of both maps; the log should
   have `linked to the Open World's map` and `an Open World race`).
