@@ -44,7 +44,7 @@ player's car, with a marker per car (in the Open World mod, the country round th
 - The screen minimap is opt-in since 1.0.0: `Display.Enabled` (default false, read at start) turns it on and is the only thing that adds
   its K key to Settings > Controls. K hides and shows it for the session only (not saved). The GPS is how a player gets a map by
   default.
-- Keep the README's install section clear that only the `MiniMap` folder goes into `HalfGripMods\` (`mod.json` directly inside
+- The README's install section leads with the HalfGripMods installer (as ProcTrack's does); in its manual steps, keep it clear that only the `MiniMap` folder goes into `HalfGripMods\` (`mod.json` directly inside
   `HalfGripMods\MiniMap\`), not the whole repo download.
 - The GPS's item id `minimap.gps` is saved in runs: never change it.
 - `MiniMap/icon.png` is the mod's picture (`"icon"` in `mod.json`, shown by the HalfGripTools 1.0.5+ mod manager and by installers):
@@ -134,10 +134,11 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 
 ## Status (keep current)
 
-- **Released:** 1.2.3 on `main` (PR #16, merged): the tap clip split into its sounds, one played at random; no lock-on timer.
-- **Open:** 1.2.4 on `claude/vibrant-turing-3uafvm`, PR #17: only the clip's first sound plays (the rest sound like menu clicks,
-  owner); races start zoomed out on the whole lap, the Open World in the middle, each with its own zoom. Compiles; not tested in game.
-- **Waiting on the owner:** an in-game test of 1.2.4: one clean tap per poke, the starting zooms. Still to confirm: no fighting
+- **Released:** 1.2.4 on `main` (PR #17, merged, tag v1.2.4): only the clip's first sound plays; races start zoomed out on the
+  whole lap, the Open World in the middle, each with its own zoom.
+- **Open:** README install section rewritten after ProcTrack's: the HalfGripMods installer first (MiniMap under SUGGESTED, or
+  **+ ADD** with the repo URL), the manual steps kept below it. On `claude/vibrant-turing-3uafvm`, no PR yet.
+- **Waiting on the owner:** an in-game test of 1.2.4 (released, untested): one clean tap per poke, the starting zooms. Still to confirm: no fighting
   when looking over a shoulder, a gamepad if there is one; and the first Open World test (screenshots of both maps; the log should
   have `linked to the Open World's map` and `an Open World race`).
 - **Open questions for the owner:** zoom out with speed? A north-up option? (Both left out: heading-up, fixed window.)
