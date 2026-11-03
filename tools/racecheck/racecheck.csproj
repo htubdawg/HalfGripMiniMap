@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Exercise the real marker collector without loading Unity native code or the game. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <NoWarn>CS0649</NoWarn>
+    <RaceSource Condition="'$(RaceSource)' == ''">$(MSBuildThisFileDirectory)../../MiniMap/src/Race.cs</RaceSource>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(RaceSource)" Link="Race.cs" />
+  </ItemGroup>
+</Project>

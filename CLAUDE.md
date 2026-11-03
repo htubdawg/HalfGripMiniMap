@@ -136,8 +136,14 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 
 - **Released:** 1.2.4 on `main` (PR #17, merged, tag v1.2.4): only the clip's first sound plays; races start zoomed out on the
   whole lap, the Open World in the middle, each with its own zoom.
-- **Open:** README install section rewritten after ProcTrack's: the HalfGripMods installer first (MiniMap under SUGGESTED, or
-  **+ ADD** with the repo URL), the manual steps kept below it. On `claude/vibrant-turing-3uafvm`, PR #18.
+- **Merged:** README install section rewritten after ProcTrack's: the HalfGripMods installer first (MiniMap under SUGGESTED, or
+  **+ ADD** with the repo URL), the manual steps kept below it: PR #18 is merged into `main`.
+- **Test branch:** `codex/test-minimap-respawn-markers`, based on `main` after PR #18. `Race.Gather` combines leaderboard cars and
+  live `TrackManager.Enemies`, deduplicates them, and keeps remote markers blue. Multiplayer creates a replacement stand-in after
+  a wreck without registering it in the nonempty leaderboard, which previously made it disappear from both maps. No release/version
+  bump yet. `dotnet run -c Release --project tools/racecheck`: 12 checks pass; original `main` fails the respawn check. Compile against
+  the 0.419 refs passes with zero warnings/errors. Awaiting an in-game two-player test (wreck/respawn twice; check GPS and HUD,
+  one blue marker each time), then review/merge. GitHub API access returns Forbidden here, so opening a PR is blocked.
 - **Waiting on the owner:** an in-game test of 1.2.4 (released, untested): one clean tap per poke, the starting zooms. Still to confirm: no fighting
   when looking over a shoulder, a gamepad if there is one; and the first Open World test (screenshots of both maps; the log should
   have `linked to the Open World's map` and `an Open World race`).
@@ -145,4 +151,5 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 - **Known, not yet fixed:** `tools/preview` no longer reproduces the committed `MiniMap/icon.png` exactly (160 pixels differ, round
   the car markers). It was so on `main` before 1.1.0, and 1.1.0's output is byte-identical to the old code's, so the cause is in the
   inputs (the laps in `tools/preview/laps/`?) or the commit that made the icon. Find out before the icon is next regenerated.
-- **Branch:** sessions work on `claude/vibrant-turing-3uafvm`; once its PR is merged, restart it from `origin/main`.
+- **Branch:** Claude sessions use `claude/vibrant-turing-3uafvm`; its PR #18 is merged. The separate Codex test branch above leaves
+  that branch untouched; review it before merging the respawn fix into `main`.
