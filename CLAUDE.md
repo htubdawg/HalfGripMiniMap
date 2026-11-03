@@ -140,8 +140,8 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
   **+ ADD** with the repo URL), the manual steps kept below it: PR #18 is merged into `main`.
 - **Test branch:** `codex/test-minimap-respawn-markers`, based on `main` after PR #18. `Race.Gather` combines leaderboard cars and
   live `TrackManager.Enemies`, deduplicates them, and keeps remote markers blue. Multiplayer creates a replacement stand-in after
-  a wreck without registering it in the nonempty leaderboard, which previously made it disappear from both maps. No release/version
-  bump yet. `dotnet run -c Release --project tools/racecheck`: 12 checks pass; original `main` fails the respawn check. Compile against
+  a wreck without registering it in the nonempty leaderboard, which previously made it disappear from both maps. Manifest and README
+  bumped to 1.2.5 for testing; not merged or tagged. `dotnet run -c Release --project tools/racecheck`: 12 checks pass; original `main` fails the respawn check. Compile against
   the 0.419 refs passes with zero warnings/errors. Awaiting an in-game two-player test (wreck/respawn twice; check GPS and HUD,
   one blue marker each time), then review/merge. GitHub API access returns Forbidden here, so opening a PR is blocked.
 - **Waiting on the owner:** an in-game test of 1.2.4 (released, untested): one clean tap per poke, the starting zooms. Still to confirm: no fighting
