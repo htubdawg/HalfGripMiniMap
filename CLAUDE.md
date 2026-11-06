@@ -145,7 +145,8 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
   - `OpenWorldLink.Update` is guarded like `Active`: an error there gives one warning and race maps, not the maps stopping.
   - `MiniMapHud.PixelScale`: the pixel size gives way at the 40 and 300 pixel resolution limits so the minimap is the set
     `Display.Size` (120 with PixelSize 4 drew 160; 700 with PixelSize 1 drew 300). The default 300 / 3 is unchanged.
-  - Checked: `tools/racecheck` 12 pass; every file but `Mod.cs`/`Gps.cs` compiles against the 0.418 refs with no warnings (a full
+  - `gameVersion` and the README moved to 0.419 (the refs are 0.419; it changed only steering, speedrun and stats code).
+  - Checked: `tools/racecheck` 12 pass; every file but `Mod.cs`/`Gps.cs` compiles against the 0.419 refs with no warnings (a full
     `tools/check.sh` needs a built HalfGripTools.dll, not done in that session). Not tested in game.
 - **Known, not yet fixed:** `tools/worldview` no longer builds against Open World 0.26: its list of Open World source files
   predates the circuit, rally and hill-climb code that `Network.cs` now uses.
