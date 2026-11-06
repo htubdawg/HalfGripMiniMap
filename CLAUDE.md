@@ -7,7 +7,7 @@ player's car, with a marker per car (in the Open World mod, the country round th
 
 - A **source mod** for [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) (BepInEx 5). The loader compiles `MiniMap/src/*.cs` at
   game start with Roslyn (**C# 10**, netstandard2.1) against every DLL in the game's `Managed` folder, BepInEx, 0Harmony and HalfGripTools.
-  What ships is the `MiniMap/` folder; it is installed to `<game>\BepInEx\HalfGripMods\MiniMap\`. It needs HalfGripTools 1.0.2+ (`ctx.Keys`).
+  What ships is the `MiniMap/` folder; it is installed to `<game>\BepInEx\HalfGripMods\MiniMap\`. It asks for HalfGripTools 1.0.6+ (`"tools"` in `mod.json`, the current release: owner, 1.2.6); its API needs only 1.0.2 (`ctx.Keys`).
 - Loader API: `docs/WRITING_MODS.md`; known game classes: `docs/GAME_NOTES.md` (both in HalfGripTools). Game DLLs and scene dumps are in the
   private `htubdawg/HalfGripRefs` repo.
 
@@ -49,7 +49,7 @@ player's car, with a marker per car (in the Open World mod, the country round th
 - The GPS's item id `minimap.gps` is saved in runs: never change it.
 - `MiniMap/icon.png` is the mod's picture (`"icon"` in `mod.json`, shown by the HalfGripTools 1.0.5+ mod manager and by installers):
   128x128, the GPS in its card style with a ProcTrack lap on its screen, made by `tools/preview` from the mod's own `GpsArt` and
-  `PixelMap`. Older loaders ignore the field, so `tools` stays 1.0.2.
+  `PixelMap`. Loaders older than 1.0.5 ignore the field.
 - Work on a branch and open a PR; do not push to `main`.
 - **Keep the Status section below current.** Sessions get their context cleared without warning, and this file is what the next one
   reads first. After each step that changes the state (a push, a PR opened or merged, a test report from the owner, a decision),
@@ -146,6 +146,7 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
   - `MiniMapHud.PixelScale`: the pixel size gives way at the 40 and 300 pixel resolution limits so the minimap is the set
     `Display.Size` (120 with PixelSize 4 drew 160; 700 with PixelSize 1 drew 300). The default 300 / 3 is unchanged.
   - `gameVersion` and the README moved to 0.419 (the refs are 0.419; it changed only steering, speedrun and stats code).
+  - `tools` moved to 1.0.6, the current HalfGripTools (owner): older loaders skip the mod with "needs HalfGripTools 1.0.6 or newer".
   - Checked: `tools/racecheck` 12 pass; every file but `Mod.cs`/`Gps.cs` compiles against the 0.419 refs with no warnings (a full
     `tools/check.sh` needs a built HalfGripTools.dll, not done in that session). Not tested in game.
 - **Known, not yet fixed:** `tools/worldview` no longer builds against Open World 0.26: its list of Open World source files
