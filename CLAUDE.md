@@ -140,7 +140,8 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 - **Released:** 1.2.5 (PR #20 merged into `main`, published as the latest release; jMods carries it): `Race.Gather` combines
   leaderboard cars and live `TrackManager.Enemies`, so a multiplayer respawn keeps its blue marker. Still wants the in-game
   two-player test (wreck/respawn twice; one blue marker each time on GPS and HUD).
-- **Open:** 1.2.6 on `claude/minimap-audit-1.2.6` (from `main` after PR #20), from an audit of 1.2.5:
+- **1.2.6, not released yet:** the fixes are in `main` (PR #21, merged); game 0.419, HalfGripTools 1.0.6 and the release rule are in
+  PR #22 (`claude/minimap-1.2.6-versions`). Next: the owner merges #22, then publishes the v1.2.6 release (jMods syncs it). From an audit of 1.2.5:
   - `WorldTiles.Ranked` caught up with Open World 0.26's map colours: drive, footpath, rally stage and hill climb were ranking as
     land, so the event courses broke up once a map pixel is wider than a tile pixel. Order follows Open World's own paint order.
   - `Race.Find` keeps the newest track line object even when its points match (it compared against the old one every frame), and
@@ -161,4 +162,5 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 - **Known, not yet fixed:** `tools/preview` no longer reproduces the committed `MiniMap/icon.png` exactly (160 pixels differ, round
   the car markers). It was so on `main` before 1.1.0, and 1.1.0's output is byte-identical to the old code's, so the cause is in the
   inputs (the laps in `tools/preview/laps/`?) or the commit that made the icon. Find out before the icon is next regenerated.
-- **Branch:** 1.2.6 is on `claude/minimap-audit-1.2.6`. The older `claude/vibrant-turing-3uafvm` (PR #18) is merged and behind `main`; do not reuse it.
+- **Branches:** `claude/minimap-audit-1.2.6` (PR #21) and `claude/vibrant-turing-3uafvm` (PR #18) are merged: never push to a merged
+  PR's branch again (commits pushed to #21 after its merge were left out of `main`). Start each change on a new branch from `main`.
