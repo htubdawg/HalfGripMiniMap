@@ -7,7 +7,7 @@ player's car, with a marker per car (in the Open World mod, the country round th
 
 - A **source mod** for [HalfGripTools](https://github.com/4l3x4nd3r0/HalfGripTools) (BepInEx 5). The loader compiles `MiniMap/src/*.cs` at
   game start with Roslyn (**C# 10**, netstandard2.1) against every DLL in the game's `Managed` folder, BepInEx, 0Harmony and HalfGripTools.
-  What ships is the `MiniMap/` folder; it is installed to `<game>\BepInEx\HalfGripMods\MiniMap\`. It needs HalfGripTools 1.0.2+ (`ctx.Keys`).
+  What ships is the `MiniMap/` folder; it is installed to `<game>\BepInEx\HalfGripMods\MiniMap\`. It asks for HalfGripTools 1.0.6+ (`"tools"` in `mod.json`, the current release: owner, 1.2.6); its API needs only 1.0.2 (`ctx.Keys`).
 - Loader API: `docs/WRITING_MODS.md`; known game classes: `docs/GAME_NOTES.md` (both in HalfGripTools). Game DLLs and scene dumps are in the
   private `htubdawg/HalfGripRefs` repo.
 
@@ -34,7 +34,10 @@ player's car, with a marker per car (in the Open World mod, the country round th
 - **Any map.** Never depend on one map's objects: the track line (`PathManager.sampledPoints`, a closed loop) and the leaderboard's cars are
   all the map needs. ProcTrack replaces the line after the scene loads, which is why the HUD re-checks it twice a second.
 - The base map is told from the **scene** name, not the run map entry, so mods that reuse a game scene get that scene's colours.
-- Bump `version` in `mod.json` with each release and keep the version at the top of `README.md` in step.
+- **Every release, without being asked:** bump `version` in `mod.json`; set `gameVersion` to the current game (HalfGripRefs'
+  README, "Current game version") and `tools` to the current HalfGripTools release (`Plugin.Version` in
+  `4l3x4nd3r0/HalfGripTools`); keep the header line at the top of `README.md` (version, game, HalfGripTools) and the install
+  step's HalfGripTools version in step. Then open the PR yourself. The owner should never have to ask for any of these.
 - C# 10 and netstandard2.1 only. Tabs, `///` summaries that explain *why*, `Mod.Log.LogWarning` with a try/catch around risky work.
 - **Logging:** everything but warnings and errors goes through `Mod.Info(...)`, which writes only with `Debug.VerboseLog` on. No
   unconditional `LogInfo`, not even for diagnostics; ask the owner to turn verbose on instead.
@@ -49,7 +52,7 @@ player's car, with a marker per car (in the Open World mod, the country round th
 - The GPS's item id `minimap.gps` is saved in runs: never change it.
 - `MiniMap/icon.png` is the mod's picture (`"icon"` in `mod.json`, shown by the HalfGripTools 1.0.5+ mod manager and by installers):
   128x128, the GPS in its card style with a ProcTrack lap on its screen, made by `tools/preview` from the mod's own `GpsArt` and
-  `PixelMap`. Older loaders ignore the field, so `tools` stays 1.0.2.
+  `PixelMap`. Loaders older than 1.0.5 ignore the field.
 - Work on a branch and open a PR; do not push to `main`.
 - **Keep the Status section below current.** Sessions get their context cleared without warning, and this file is what the next one
   reads first. After each step that changes the state (a push, a PR opened or merged, a test report from the owner, a decision),
@@ -137,7 +140,8 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 - **Released:** 1.2.5 (PR #20 merged into `main`, published as the latest release; jMods carries it): `Race.Gather` combines
   leaderboard cars and live `TrackManager.Enemies`, so a multiplayer respawn keeps its blue marker. Still wants the in-game
   two-player test (wreck/respawn twice; one blue marker each time on GPS and HUD).
-- **Open:** 1.2.6 on `claude/minimap-audit-1.2.6` (from `main` after PR #20), from an audit of 1.2.5:
+- **1.2.6, not released yet:** the fixes are in `main` (PR #21, merged); game 0.419, HalfGripTools 1.0.6 and the release rule are in
+  PR #22 (`claude/minimap-1.2.6-versions`). Next: the owner merges #22, then publishes the v1.2.6 release (jMods syncs it). From an audit of 1.2.5:
   - `WorldTiles.Ranked` caught up with Open World 0.26's map colours: drive, footpath, rally stage and hill climb were ranking as
     land, so the event courses broke up once a map pixel is wider than a tile pixel. Order follows Open World's own paint order.
   - `Race.Find` keeps the newest track line object even when its points match (it compared against the old one every frame), and
@@ -145,7 +149,9 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
   - `OpenWorldLink.Update` is guarded like `Active`: an error there gives one warning and race maps, not the maps stopping.
   - `MiniMapHud.PixelScale`: the pixel size gives way at the 40 and 300 pixel resolution limits so the minimap is the set
     `Display.Size` (120 with PixelSize 4 drew 160; 700 with PixelSize 1 drew 300). The default 300 / 3 is unchanged.
-  - Checked: `tools/racecheck` 12 pass; every file but `Mod.cs`/`Gps.cs` compiles against the 0.418 refs with no warnings (a full
+  - `gameVersion` and the README moved to 0.419 (the refs are 0.419; it changed only steering, speedrun and stats code).
+  - `tools` moved to 1.0.6, the current HalfGripTools (owner): older loaders skip the mod with "needs HalfGripTools 1.0.6 or newer".
+  - Checked: `tools/racecheck` 12 pass; every file but `Mod.cs`/`Gps.cs` compiles against the 0.419 refs with no warnings (a full
     `tools/check.sh` needs a built HalfGripTools.dll, not done in that session). Not tested in game.
 - **Known, not yet fixed:** `tools/worldview` no longer builds against Open World 0.26: its list of Open World source files
   predates the circuit, rally and hill-climb code that `Network.cs` now uses.
@@ -156,4 +162,5 @@ loop. While its `MapView.Active` is true, `Race.OpenWorld` is set and both maps 
 - **Known, not yet fixed:** `tools/preview` no longer reproduces the committed `MiniMap/icon.png` exactly (160 pixels differ, round
   the car markers). It was so on `main` before 1.1.0, and 1.1.0's output is byte-identical to the old code's, so the cause is in the
   inputs (the laps in `tools/preview/laps/`?) or the commit that made the icon. Find out before the icon is next regenerated.
-- **Branch:** 1.2.6 is on `claude/minimap-audit-1.2.6`. The older `claude/vibrant-turing-3uafvm` (PR #18) is merged and behind `main`; do not reuse it.
+- **Branches:** `claude/minimap-audit-1.2.6` (PR #21) and `claude/vibrant-turing-3uafvm` (PR #18) are merged: never push to a merged
+  PR's branch again (commits pushed to #21 after its merge were left out of `main`). Start each change on a new branch from `main`.
