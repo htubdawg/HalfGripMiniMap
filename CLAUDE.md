@@ -34,7 +34,10 @@ player's car, with a marker per car (in the Open World mod, the country round th
 - **Any map.** Never depend on one map's objects: the track line (`PathManager.sampledPoints`, a closed loop) and the leaderboard's cars are
   all the map needs. ProcTrack replaces the line after the scene loads, which is why the HUD re-checks it twice a second.
 - The base map is told from the **scene** name, not the run map entry, so mods that reuse a game scene get that scene's colours.
-- Bump `version` in `mod.json` with each release and keep the version at the top of `README.md` in step.
+- **Every release, without being asked:** bump `version` in `mod.json`; set `gameVersion` to the current game (HalfGripRefs'
+  README, "Current game version") and `tools` to the current HalfGripTools release (`Plugin.Version` in
+  `4l3x4nd3r0/HalfGripTools`); keep the header line at the top of `README.md` (version, game, HalfGripTools) and the install
+  step's HalfGripTools version in step. Then open the PR yourself. The owner should never have to ask for any of these.
 - C# 10 and netstandard2.1 only. Tabs, `///` summaries that explain *why*, `Mod.Log.LogWarning` with a try/catch around risky work.
 - **Logging:** everything but warnings and errors goes through `Mod.Info(...)`, which writes only with `Debug.VerboseLog` on. No
   unconditional `LogInfo`, not even for diagnostics; ask the owner to turn verbose on instead.
